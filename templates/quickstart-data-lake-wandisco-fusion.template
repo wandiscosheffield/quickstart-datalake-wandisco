@@ -1,0 +1,1100 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CloudFormation template to create a Fusion instances for AWS Marketplace",
+  "Parameters": {
+    "S3Bucket": {
+      "Type": "String",
+      "Description": "The name of an existing S3 bucket to synchronize with.",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "Must provide S3 Bucket value"
+    },
+    "ClusterNodeType": {
+      "Type": "String",
+      "Description": "Instance Type for Fusion  nodes",
+      "Default": "m3.2xlarge",
+      "AllowedValues": [
+        "m3.xlarge",
+        "m3.2xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "g2.2xlarge",
+        "g2.8xlarge",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "cr1.8xlarge",
+        "cc2.8xlarge"
+      ],
+      "ConstraintDescription": "Must be a valid EC2 instance type."
+    },
+    "PersistentStorage": {
+      "Type": "Number",
+      "Default": "0",
+      "Description": "Allocated EBS storage for each block device (in GB; 4 devs per node); 0 indicates ephemeral storage only",
+      "MinValue": "0",
+      "MaxValue": "1024",
+      "ConstraintDescription": "No more than 1024 GB per device (4 TB per node)."
+    },
+    "KeyName": {
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "Name of an existing EC2 KeyPair within the AWS account; all instances will launch with this KeyPair",
+      "MinLength": "1",
+      "ConstraintDescription": "Must be the name of an existing EC2 KeyPair."
+    },
+    "ClusterName": {
+      "Type": "String",
+      "Default": "awsfs",
+      "Description": "Fusion CF ID",
+      "AllowedPattern": "[0-9A-z]+",
+      "ConstraintDescription": "The ClusterName value must be alphanumeric"
+    },
+    "UserName": {
+      "Type": "String",
+      "Default": "admin",
+      "Description": "The name of the default admin user for WD Fusion",
+      "AllowedPattern": "[0-9A-z]+",
+      "ConstraintDescription": "The User Name value must be alphanumeric"
+    },
+    "Password": {
+      "Type": "String",
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description": "The password for the WD Fusion admin.  By default it is admin",
+      "AllowedPattern": "[0-9A-z]+",
+      "ConstraintDescription": "The password value must be alphanumeric"
+    },
+    "FusionVersion": {
+      "Type": "String",
+      "Default": "2.10",
+      "Description": "Fusion Version",
+      "AllowedValues": [
+        "2.10"
+      ],
+      "ConstraintDescription": "Supported versions of Fusion within AWS Marketplace"
+    },
+    "SubscribeARN": {
+      "Type": "String",
+      "Description": "ARN Code of topic to email."
+    },
+    "EMRVersion": {
+      "Type": "String",
+      "Default": "5.4.0",
+      "Description": "EMR Version",
+      "AllowedValues": [
+        "5.3.0",
+        "5.4.0"
+      ],
+      "ConstraintDescription": "Supported versions of EMR backend"
+    },
+    "FusionLicense": {
+      "Type": "String",
+      "Description": "S3 Path (format: s3://bucket-name/path) or URL of Fusion License (leave blank for a trial license)",
+      "AllowedPattern": "(^s3://[^/]+/.+)|(.*amazonaws.com/.*)|(^$)",
+      "ConstraintDescription": "FusionLicense must be a valid S3 Path (format: s3://bucket-name/path), URL, or blank"
+    },
+    "ZoneName": {
+      "Type": "String",
+      "Default": "AWSCloud",
+      "Description": "Name of Fusion Zone",
+      "AllowedPattern": "^[^ ].+",
+      "ConstraintDescription": "ZoneName should not start with a space"
+    },
+    "S3ServerEncryption": {
+      "Type": "String",
+      "Default": "Yes",
+      "Description": "Enable server-side encryption on S3",
+      "AllowedValues": [
+        "Yes",
+        "No"
+      ],
+      "ConstraintDescription": "Must respond \"Yes\" or \"No\""
+    },
+    "EncryptionAlgorithm": {
+      "Type": "String",
+      "Default": "AES256",
+      "Description": "Algorithm to use for server-side encryption on S3 (default AES256)",
+      "AllowedValues": [
+        "AES256"
+      ],
+      "ConstraintDescription": "Must specify an algorithm"
+    },
+    "KMSKey": {
+      "Type": "String",
+      "Default": "",
+      "Description": "ARN for KMS Encryption Key ID (leave blank to disable KMS encryption)",
+      "AllowedPattern": ".*",
+      "ConstraintDescription": "Must be a valid ARN"
+    },
+    "InductorNodeIP": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Hostname or IP of other Fusion Server node (leave blank to skip automatic node induction)",
+      "AllowedPattern": ".*",
+      "ConstraintDescription": "Must be a valid Hostname or IP"
+    },
+    "ClusterInstanceCount": {
+      "Description": "Size of Fusion Server cluster",
+      "Type": "Number",
+      "Default": "1",
+      "AllowedValues": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    "VpcId": {
+      "Description": "The Id of the VPC to use. Your Fusion instance will be launched in this Virtual Private Cloud. You need to select an existing VPC, and you must ensure that you have configured that VPC previously in a way that allows bi-directional network connectivity with all your other Fusion servers. The VPC must have an appropriate IP address range, associated subnet, route table, network gateway, and security settings. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
+      "Type": "AWS::EC2::VPC::Id"
+    },
+    "SubnetIdA": {
+      "Description": "The Id of the Subnet to use. Fusion will be launched in this subnet associated with your chosen VPC. You must ensure that the IP address range of this subnet is routable from your other Fusion servers so that they can communicate directly with an IP address in this subnet. You must also ensure that the subnet has a route table defined that allows hosts within it to communicate with all other Fusion servers. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
+      "Type": "AWS::EC2::Subnet::Id"
+    },
+    "SubnetIdB": {
+      "Description": "The Id of the Subnet to use. Fusion will be launched in this subnet associated with your chosen VPC. You must ensure that the IP address range of this subnet is routable from your other Fusion servers so that they can communicate directly with an IP address in this subnet. You must also ensure that the subnet has a route table defined that allows hosts within it to communicate with all other Fusion servers. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
+      "Type": "AWS::EC2::Subnet::Id"
+    },
+    "SecurityGroupId": {
+      "Description": "The Id of the Security Group to use. This Security Group will be used by the EC2 instance in which Fusion runs. You must ensure that it allows inbound and outbound communication on all the ports required for Fusion's operation. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
+      "Type": "AWS::EC2::SecurityGroup::Id"
+    },
+    "QSS3BucketName": {
+      "AllowedPattern": "^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$",
+      "ConstraintDescription": "must be a valid s3 bucket name",
+      "Default": "quickstart-reference",
+      "Description": "Quick Start S3 bucket name",
+      "Type": "String"
+    },
+    "QSS3KeyPrefix": {
+      "AllowedPattern": "^[0-9a-zA-Z-/]*$",
+      "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+      "Default": "wandisco/fusion/latest",
+      "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+      "Type": "String"
+    }
+  },
+  "Mappings": {
+    "FusionVersionInstaller": {
+      "2.10": {
+        "FileURI": "s3://wandisco-public-files/fusion/sturdy/fusion-ui-server-emr_rpm_installer_2.10.3_sturdy.sh"
+      }
+    },
+    "AWSRegionToAMI": {
+      "us-east-1": {
+        "amiID": "ami-25b0c632"
+      },
+      "us-west-1": {
+        "amiID": "ami-50b0fc30"
+      },
+      "us-west-2": {
+        "amiID": "ami-2db86b4d"
+      },
+      "eu-central-1": {
+        "amiID": "ami-4387752c"
+      },
+      "eu-west-1": {
+        "amiID": "ami-38740b4b"
+      },
+      "ap-southeast-1": {
+        "amiID": "ami-d4b862b7"
+      },
+      "ap-southeast-2": {
+        "amiID": "ami-c71322a4"
+      },
+      "ap-northeast-1": {
+        "amiID": "ami-9b64b0fa"
+      },
+      "ap-northeast-2": {
+        "amiID": "ami-e807d286"
+      },
+      "sa-east-1": {
+        "amiID": "ami-b0ae3edc"
+      },
+      "ap-south-1": {
+        "amiID": "ami-ed82f782"
+      }
+    },
+    "GlobalCoordinates": {
+      "us-gov-west-1": {
+        "latitude": "43.6167",
+        "longitude": "-116.2000"
+      },
+      "cn-north-1": {
+        "latitude": "35.0000",
+        "longitude": "103.0000"
+      },
+      "us-east-1": {
+        "latitude": "37.5000",
+        "longitude": "-79.0000"
+      },
+      "us-west-1": {
+        "latitude": "38.2813",
+        "longitude": "-120.9045"
+      },
+      "us-west-2": {
+        "latitude": "45.5200",
+        "longitude": "-122.6819"
+      },
+      "eu-central-1": {
+        "latitude": "50.110922",
+        "longitude": "8.682127"
+      },
+      "eu-west-1": {
+        "latitude": "53.3442",
+        "longitude": "-6.2675"
+      },
+      "ap-southeast-1": {
+        "latitude": "1.3000",
+        "longitude": "103.8000"
+      },
+      "ap-southeast-2": {
+        "latitude": "-33.8650",
+        "longitude": "151.2094"
+      },
+      "ap-northeast-1": {
+        "latitude": "35.6833",
+        "longitude": "139.6833"
+      },
+      "ap-northeast-2": {
+        "latitude": "37.5667",
+        "longitude": "126.9667"
+      },
+      "sa-east-1": {
+        "latitude": "-23.5500",
+        "longitude": "-46.6333"
+      },
+      "ap-south-1": {
+        "latitude": "19.0728",
+        "longitude": "72.8826"
+      },
+      "fips-us-gov-west-1": {
+        "latitude": "39.0000",
+        "longitude": "-117.0000"
+      }
+    }
+  },
+  "Conditions": {
+    "EnableWaitConditions": {
+      "Fn::Equals": [
+        "1",
+        "1"
+      ]
+    },
+    "EphemeralStorage": {
+      "Fn::Equals": [
+        {
+          "Ref": "PersistentStorage"
+        },
+        "0"
+      ]
+    }
+  },
+  "Resources": {
+    "InstanceIAMRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Resource": "arn:aws:dynamodb:*:*:table/EmrFSMetadata",
+                  "Action": [
+                    "dynamodb:*"
+                  ],
+                  "Effect": "Allow"
+                },
+                {
+                  "Action": [
+                    "autoscaling:DetachInstances",
+                    "autoscaling:DescribeAutoScalingInstances",
+                    "autoscaling:DescribeAutoScalingGroups"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": [
+                    "ec2:CreateTags",
+                    "ec2:DescribeInstances",
+                    "ec2:ModifyInstanceAttribute",
+                    "ec2:DescribeHosts",
+                    "ec2:DescribeTags",
+                    "ec2:DescribeSecurityGroups",
+                    "cloudformation:DescribeStackResources"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": [
+                    "sns:Publish",
+                    "sns:Subscribe"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": [
+                    "s3:ListAllMyBuckets"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": [
+                    "s3:ListBucket",
+                    "s3:GetBucketLocation",
+                    "s3:ListBucketMultipartUploads"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:s3:::",
+                        {
+                          "Ref": "S3Bucket"
+                        },
+                        ""
+                      ]
+                    ]
+                  }
+                },
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject",
+                    "s3:GetBucketLocation"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:aws:s3:::",
+                        {
+                          "Ref": "S3Bucket"
+                        },
+                        "/*"
+                      ]
+                    ]
+                  }
+                },
+                {
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:s3:::wandisco-public-files/*"
+                }
+              ]
+            },
+            "PolicyName": "DescribeAccessEC2andCFN"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::Role"
+    },
+    "InstanceProfile": {
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "InstanceIAMRole"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::InstanceProfile"
+    },
+    "FusionInstalledHandler": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "FusionInstalledCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "Condition": "EnableWaitConditions",
+      "DependsOn": "ClusterNodes",
+      "Properties": {
+        "Handle": {
+          "Ref": "FusionInstalledHandler"
+        },
+        "Timeout": "1800",
+        "Count": {
+          "Ref": "ClusterInstanceCount"
+        }
+      }
+    },
+    "ClusterCompleteHandle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "ClusterCompleteCondition": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "Condition": "EnableWaitConditions",
+      "DependsOn": "FusionInstalledCondition",
+      "Properties": {
+        "Handle": {
+          "Ref": "ClusterCompleteHandle"
+        },
+        "Timeout": "1800",
+        "Count": {
+          "Ref": "ClusterInstanceCount"
+        }
+      }
+    },
+    "ClusterNodes": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "SubnetIdA"
+          },
+          {
+            "Ref": "SubnetIdB"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "ClusterNodeLaunchConfig"
+        },
+        "MinSize": 0,
+        "MaxSize": {
+          "Ref": "ClusterInstanceCount"
+        },
+        "DesiredCapacity": {
+          "Ref": "ClusterInstanceCount"
+        }
+      }
+    },
+    "ClusterNodeLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "BlockDeviceMappings": {
+          "Fn::If": [
+            "EphemeralStorage",
+            [
+              {
+                "DeviceName": "/dev/sdb",
+                "VirtualName": "ephemeral0"
+              },
+              {
+                "DeviceName": "/dev/sdc",
+                "VirtualName": "ephemeral1"
+              },
+              {
+                "DeviceName": "/dev/sdd",
+                "VirtualName": "ephemeral2"
+              },
+              {
+                "DeviceName": "/dev/sde",
+                "VirtualName": "ephemeral3"
+              }
+            ],
+            [
+              {
+                "DeviceName": "/dev/sdb",
+                "Ebs": {
+                  "VolumeSize": {
+                    "Ref": "PersistentStorage"
+                  },
+                  "DeleteOnTermination": "True"
+                }
+              },
+              {
+                "DeviceName": "/dev/sdc",
+                "Ebs": {
+                  "VolumeSize": {
+                    "Ref": "PersistentStorage"
+                  },
+                  "DeleteOnTermination": "True"
+                }
+              },
+              {
+                "DeviceName": "/dev/sdd",
+                "Ebs": {
+                  "VolumeSize": {
+                    "Ref": "PersistentStorage"
+                  },
+                  "DeleteOnTermination": "True"
+                }
+              },
+              {
+                "DeviceName": "/dev/sde",
+                "Ebs": {
+                  "VolumeSize": {
+                    "Ref": "PersistentStorage"
+                  },
+                  "DeleteOnTermination": "True"
+                }
+              }
+            ]
+          ]
+        },
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionToAMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            "amiID"
+          ]
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "SecurityGroupId"
+          }
+        ],
+        "InstanceType": {
+          "Ref": "ClusterNodeType"
+        },
+        "KeyName": {
+          "Ref": "KeyName"
+        },
+        "AssociatePublicIpAddress": "true",
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfile"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\n",
+                "cat << EOF > /tmp/amazonProperties.properties\n",
+                "AWS_STACKNAME='",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "'\n",
+                "AWS_STACKID='",
+                {
+                  "Ref": "AWS::StackId"
+                },
+                "'\n",
+                "AWS_REGION='",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "'\n",
+                "AWS_CLUSTER_NAME='",
+                {
+                  "Ref": "ClusterName"
+                },
+                "'\n",
+                "FUSION_VERSION='",
+                {
+                  "Ref": "FusionVersion"
+                },
+                "'\n",
+                "FUSION_INSTALLER='",
+                {
+                  "Fn::FindInMap": [
+                    "FusionVersionInstaller",
+                    {
+                      "Ref": "FusionVersion"
+                    },
+                    "FileURI"
+                  ]
+                },
+                "'\n",
+                "LATITUDE='",
+                {
+                  "Fn::FindInMap": [
+                    "GlobalCoordinates",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "latitude"
+                  ]
+                },
+                "'\n",
+                "LONGITUDE='",
+                {
+                  "Fn::FindInMap": [
+                    "GlobalCoordinates",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "longitude"
+                  ]
+                },
+                "'\n",
+                "ZONE_NAME='",
+                {
+                  "Ref": "ZoneName"
+                },
+                "'\n",
+                "USERNAME='",
+                {
+                  "Ref": "UserName"
+                },
+                "'\n",
+                "PASSWORD='",
+                {
+                  "Ref": "Password"
+                },
+                "'\n",
+                "BUCKET_NAME='",
+                {
+                  "Ref": "S3Bucket"
+                },
+                "'\n",
+                "INDUCTOR_IP='",
+                {
+                  "Ref": "InductorNodeIP"
+                },
+                "'\n",
+                "SERVER_ENCRYPTION='",
+                {
+                  "Ref": "S3ServerEncryption"
+                },
+                "'\n",
+                "SERVER_ENCRYPTION_ALGORITHM='",
+                {
+                  "Ref": "EncryptionAlgorithm"
+                },
+                "'\n",
+                "KMS_KEY='",
+                {
+                  "Ref": "KMSKey"
+                },
+                "'\n",
+                "BACKEND_VERSION='emr-",
+                {
+                  "Ref": "EMRVersion"
+                },
+                "'\n",
+                "LICENSE_URL='",
+                {
+                  "Ref": "FusionLicense"
+                },
+                "'\n",
+                "CLUSTER_COMPLETE_HANDLE='",
+                {
+                  "Ref": "ClusterCompleteHandle"
+                },
+                "'\n",
+                "FUSION_INSTALLED_HANDLER='",
+                {
+                  "Ref": "FusionInstalledHandler"
+                },
+                "'\n",
+                "CLUSTER_INSTANCE_COUNT='",
+                {
+                  "Ref": "ClusterInstanceCount"
+                },
+                "'\n",
+                "SECURITY_GROUP_ID='",
+                {
+                  "Ref": "SecurityGroupId"
+                },
+                "'\n",
+                "SUBSCRIBE_EMAIL_ARN='",
+                {
+                  "Ref": "SubscribeARN"
+                },
+                "'\n",
+                "EOF\n",
+                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/common-2_10_3.sh /tmp/common-2_10_3.sh\n" },
+                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/amazonCompanionScript-2_10_3.sh /tmp/amazonCompanionScript-2_10_3.sh\n" },
+                "chmod +x /tmp/amazonCompanionScript-2_10_3.sh\n",
+                "/tmp/amazonCompanionScript-2_10_3.sh >> /var/log/cloud-init-output.log\n",
+                "\n"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "SubnetZone1": {
+      "Value": {
+        "Ref": "SubnetIdA"
+      }
+    },
+    "SubnetZone2": {
+      "Value": {
+        "Ref": "SubnetIdB"
+      }
+    },
+    "VPC": {
+      "Value": {
+        "Ref": "VpcId"
+      }
+    },
+    "SecurityGroup": {
+      "Value": {
+        "Ref": "SecurityGroupId"
+      }
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "AWS configuration"
+          },
+          "Parameters": [
+            "ClusterNodeType",
+            "VpcId",
+            "SecurityGroupId",
+            "SubnetIdA",
+            "SubnetIdB",
+            "S3Bucket",
+            "PersistentStorage",
+            "KeyName",
+            "ClusterName"
+          ]
+        },
+        {
+          "Label": {
+            "default": "WD Fusion configuration"
+          },
+          "Parameters": [
+            "ClusterInstanceCount",
+            "ZoneName",
+            "UserName",
+            "Password",
+            "InductorNodeIP",
+            "FusionVersion",
+            "SubscribeARN",
+            "EMRVersion",
+            "FusionLicense"
+          ]
+        },
+        {
+          "Label": {
+            "default": "S3 Security configuration for WD Fusion"
+          },
+          "Parameters": [
+            "KMSKey",
+            "S3ServerEncryption",
+            "EncryptionAlgorithm"
+          ]
+        },
+        {
+          "Label": {
+            "default": "* Required Field"
+          }
+        },
+        {
+          "Label": {
+            "default": "AWS Quick Start Configuration"
+          },
+          "Parameters": [
+            "QSS3BucketName",
+            "QSS3KeyPrefix"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "ClusterNodeType": {
+          "default": "EC2 Instance Type*"
+        },
+        "VpcId": {
+          "default": "VPC ID"
+        },
+        "SecurityGroupId": {
+          "default": "Security Group ID"
+        },
+        "SubnetIdA": {
+          "default": "VPC Subnet ID for Zone 1"
+        },
+        "SubnetIdB": {
+          "default": "VPC Subnet ID for Zone 2"
+        },
+        "S3Bucket": {
+          "default": "S3 Bucket*"
+        },
+        "PersistentStorage": {
+          "default": "Persistent Storage*"
+        },
+        "KeyName": {
+          "default": "Key Name*"
+        },
+        "ClusterName": {
+          "default": "Cluster Name*"
+        },
+        "ClusterInstanceCount": {
+          "default": "Cluster Instance Count*"
+        },
+        "ZoneName": {
+          "default": "Zone Name*"
+        },
+        "UserName": {
+          "default": "User Name*"
+        },
+        "Password": {
+          "default": "Password*"
+        },
+        "InductorNodeIP": {
+          "default": "Inductor Node IP"
+        },
+        "FusionVersion": {
+          "default": "Fusion Version*"
+        },
+        "SubscribeARN": {
+          "default": "ARN Topic code to publish messages to"
+        },
+        "EMRVersion": {
+          "default": "EMR Version*"
+        },
+        "FusionLicense": {
+          "default": "Fusion License"
+        },
+        "KMSKey": {
+          "default": "KMS Key"
+        },
+        "S3ServerEncryption": {
+          "default": "Enable S3 Server-side Encryption"
+        },
+        "EncryptionAlgorithm": {
+          "default": "S3 Server-side Encryption Algorithm"
+        },
+        "QSS3BucketName": {
+          "default": "AWS Quick Start Bucket Name"
+        },
+        "QSS3KeyPrefix": {
+          "default": "AWS Quick Start Version"
+        }
+      }
+    },
+    "AWS::CloudFormation::Designer": {
+      "490086bf-38f9-4006-ab66-c855e0cc3dc1": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 420,
+          "y": 660
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "060b2096-3e36-4b20-9aeb-ca6bf2d0d1ba": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 540,
+          "y": 660
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "8c1680e3-7041-409b-a911-a963ccfc0ac9": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 660,
+          "y": 660
+        },
+        "z": 1,
+        "embeds": [],
+        "isassociatedwith": [
+          "060b2096-3e36-4b20-9aeb-ca6bf2d0d1ba"
+        ]
+      },
+      "53a9df5e-ea00-46c1-a755-ab74eb4ea2e8": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 720,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "5f40bf7e-0e2e-4991-aaaf-d2890e10e552": {
+        "size": {
+          "width": 600,
+          "height": 510
+        },
+        "position": {
+          "x": 60,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": [
+          "8a4c2d69-4cab-4c25-9939-591becd10034",
+          "a6d0f93f-d74d-4130-a1d4-55be865bb69a",
+          "30a97ff0-2072-42b3-a5bb-6dc0cdd2b59f"
+        ]
+      },
+      "8a4c2d69-4cab-4c25-9939-591becd10034": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 390,
+          "y": 360
+        },
+        "z": 2,
+        "parent": "5f40bf7e-0e2e-4991-aaaf-d2890e10e552",
+        "embeds": []
+      },
+      "ee596ab8-5221-42b3-bc52-0f902574e4f9": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 720,
+          "y": 210
+        },
+        "z": 1,
+        "embeds": [],
+        "ismemberof": [
+          "8a4c2d69-4cab-4c25-9939-591becd10034"
+        ],
+        "isrelatedto": [
+          "8c1680e3-7041-409b-a911-a963ccfc0ac9",
+          "490086bf-38f9-4006-ab66-c855e0cc3dc1",
+          "d8e357ab-c11e-4aa9-b126-cf11ff9fe7fd",
+          "21657f64-77eb-4495-a805-5dc9c0ca2b49",
+          "f3d02577-5287-4adb-a34b-bff04192bbe0"
+        ]
+      },
+      "a6d0f93f-d74d-4130-a1d4-55be865bb69a": {
+        "size": {
+          "width": 240,
+          "height": 240
+        },
+        "position": {
+          "x": 90,
+          "y": 150
+        },
+        "z": 2,
+        "parent": "5f40bf7e-0e2e-4991-aaaf-d2890e10e552",
+        "embeds": [
+          "53984dd9-2b21-4a81-bf2c-9a41f4c7da0c"
+        ]
+      },
+      "30a97ff0-2072-42b3-a5bb-6dc0cdd2b59f": {
+        "size": {
+          "width": 150,
+          "height": 150
+        },
+        "position": {
+          "x": 390,
+          "y": 150
+        },
+        "z": 2,
+        "parent": "5f40bf7e-0e2e-4991-aaaf-d2890e10e552",
+        "embeds": []
+      },
+      "6b87a88f-1f4c-429f-bb28-2731609d886b": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 720,
+          "y": 330
+        },
+        "z": 1,
+        "embeds": [],
+        "isconnectedto": [
+          "30a97ff0-2072-42b3-a5bb-6dc0cdd2b59f"
+        ],
+        "isassociatedwith": [
+          "ee596ab8-5221-42b3-bc52-0f902574e4f9"
+        ]
+      },
+      "b0632cb1-76d7-4bd0-a473-9b06f3ad5986": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 840,
+          "y": 330
+        },
+        "z": 1,
+        "embeds": [],
+        "references": [
+          "490086bf-38f9-4006-ab66-c855e0cc3dc1"
+        ],
+        "dependson": [
+          "6b87a88f-1f4c-429f-bb28-2731609d886b"
+        ]
+      },
+      "f9f1252e-d042-436c-96d4-2b08b47dc748": {
+        "source": {
+          "id": "a6d0f93f-d74d-4130-a1d4-55be865bb69a"
+        },
+        "target": {
+          "id": "30a97ff0-2072-42b3-a5bb-6dc0cdd2b59f"
+        },
+        "z": 2
+      },
+      "7b651b93-7d20-4abc-8513-ffed6fdbe1eb": {
+        "source": {
+          "id": "53a9df5e-ea00-46c1-a755-ab74eb4ea2e8"
+        },
+        "target": {
+          "id": "5f40bf7e-0e2e-4991-aaaf-d2890e10e552"
+        },
+        "z": 1
+      },
+      "53984dd9-2b21-4a81-bf2c-9a41f4c7da0c": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 120,
+          "y": 210
+        },
+        "z": 3,
+        "parent": "a6d0f93f-d74d-4130-a1d4-55be865bb69a",
+        "embeds": [],
+        "references": [
+          "53a9df5e-ea00-46c1-a755-ab74eb4ea2e8"
+        ],
+        "dependson": [
+          "7b651b93-7d20-4abc-8513-ffed6fdbe1eb"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "KeyName",
+    "ParameterValue": "cikey"
+  },
+  {
+    "ParameterKey": "AvailabilityZones",
+    "ParameterValue": "$[alfred_getaz_2]"
+  },
+  {
+    "ParameterKey": "S3Bucket",
+    "ParameterValue": "$[alfred_genuuid]"
+  },
+  {
+    "ParameterKey": "AthenaBucketName",
+    "ParameterValue": "$[alfred_genuuid]"
+  },
+  {
+    "ParameterKey": "Password",
+    "ParameterValue": "$[alfred_genuuid]"
+  }
+]

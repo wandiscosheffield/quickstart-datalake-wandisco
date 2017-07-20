@@ -1,0 +1,991 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "WANDisco Fusion Getting Started full stack template: This template will deploy WANDisco Fusion into its own VPC and startup Athena to allow for sync data validation. ",
+    "Mappings": {
+        "AWSInfoRegionMap": {
+            "ap-northeast-1": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "ap-northeast-2": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "ap-south-1": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "ap-southeast-1": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "ap-southeast-2": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "ca-central-1": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "eu-central-1": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "eu-west-1": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "eu-west-2": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "sa-east-1": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "us-east-1": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "us-east-2": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "us-gov-west-1": {
+                "S3URL": "https://s3-us-gov-west-1.amazonaws.com"
+            },
+            "us-west-1": {
+                "S3URL": "https://s3.amazonaws.com"
+            },
+            "us-west-2": {
+                "S3URL": "https://s3.amazonaws.com"
+            }
+        }
+    },
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": {
+                        "default": ""
+                    },
+                    "Parameters": [
+                        "KeyName"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "Network Configuration"
+                    },
+                    "Parameters": [
+                        "VPCAvailabilityZones",
+                        "VPCCIDR",
+                        "PublicSubnet1CIDR",
+                        "PublicSubnet2CIDR",
+                        "LocalFusionAccess"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "WD Fusion Cluster Configuration"
+                    },
+                    "Parameters": [
+                        "ClusterName",
+                        "ClusterNodeType",
+                        "PersistentStorage",
+                        "ClusterInstanceCount"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "WD Fusion Data Storage Configuration"
+                    },
+                    "Parameters": [
+                        "S3Bucket",
+                        "KMSKey",
+                        "S3ServerEncryption",
+                        "EncryptionAlgorithm"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "WD Fusion Application Configuration"
+                    },
+                    "Parameters": [
+                        "ZoneName",
+                        "Username",
+                        "Password",
+                        "FusionVersion",
+                        "SubscribeARN",
+                        "EMRVersion",
+                        "FusionLicense"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "Athena Configuration"
+                    },
+                    "Parameters": [
+                        "AthenaBucketName"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "AWS Quick Start Configuration"
+                    },
+                    "Parameters": [
+                        "QSS3BucketName",
+                        "QSS3KeyPrefix"
+                    ]
+                }
+            ],
+            "ParameterLabels": {
+                "AthenaBucketName": {
+                    "default": "Athena Output Bucket"
+                },
+                "ClusterInstanceCount": {
+                    "default": "Cluster Instance Count"
+                },
+                "ClusterName": {
+                    "default": "Cluster Name"
+                },
+                "ClusterNodeType": {
+                    "default": "Cluster Node Type"
+                },
+                "EMRVersion": {
+                    "default": "EMR Version"
+                },
+                "EncryptionAlgorithm": {
+                    "default": "S3 Server-side Encryption Algorithm"
+                },
+                "FusionLicense": {
+                    "default": "Fusion License (Optional)"
+                },
+                "FusionVersion": {
+                    "default": ""
+                },
+                "KMSKey": {
+                    "default": "KMS Key (Optional)"
+                },
+                "KeyName": {
+                    "default": "Key Name"
+                },
+                "LocalFusionAccess": {
+                    "default": "Local Fusion Access CIDR"
+                },
+                "Password": {
+                    "default": "Password"
+                },
+                "PersistentStorage": {
+                    "default": "Persistent Storage"
+                },
+                "PublicSubnet1CIDR": {
+                    "default": "Public Subnet 1 CIDR"
+                },
+                "PublicSubnet2CIDR": {
+                    "default": "Public Subnet 2 CIDR"
+                },
+                "QSS3BucketName": {
+                    "default": "AWS Quick Start Bucket Name"
+                },
+                "QSS3KeyPrefix": {
+                    "default": "AWS Quick Start Version"
+                },
+                "S3Bucket": {
+                    "default": "S3 Bucket"
+                },
+                "S3ServerEncryption": {
+                    "default": "S3 Server-side Encryption Algorithm"
+                },
+                "SubscribeARN": {
+                    "default": "ARN Topic code to publish messages to (Optional)"
+                },
+                "Username": {
+                    "default": "Username"
+                },
+                "VPCAvailabilityZones": {
+                    "default": "Availability Zones"
+                },
+                "VPCCIDR": {
+                    "default": "VPC CIDR"
+                },
+                "ZoneName": {
+                    "default": "Zone Name"
+                }
+            }
+        }
+    },
+    "Parameters": {
+        "AthenaBucketName": {
+            "Description": "Athena Output Bucket",
+            "Type": "String"
+        },
+        "ClusterInstanceCount": {
+            "AllowedValues": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5"
+            ],
+            "Default": "1",
+            "Description": "Size of Fusion Server cluster",
+            "Type": "Number"
+        },
+        "ClusterName": {
+            "AllowedPattern": "[0-9A-z]+",
+            "ConstraintDescription": "The Cluster Name must be alphanumeric",
+            "Default": "awsfs",
+            "Description": "Fustion CF ID",
+            "Type": "String"
+        },
+        "ClusterNodeType": {
+            "AllowedValues": [
+                "m3.xlarge",
+                "m3.2xlarge",
+                "c3.2xlarge",
+                "c3.4xlarge",
+                "c3.8xlarge",
+                "c4.2xlarge",
+                "c4.4xlarge",
+                "c4.8xlarge",
+                "g2.2xlarge",
+                "g2.8xlarge",
+                "r3.xlarge",
+                "r3.2xlarge",
+                "r3.4xlarge",
+                "r3.8xlarge",
+                "i2.xlarge",
+                "i2.2xlarge",
+                "i2.4xlarge",
+                "i2.8xlarge",
+                "d2.xlarge",
+                "d2.2xlarge",
+                "d2.4xlarge",
+                "d2.8xlarge",
+                "cr1.8xlarge",
+                "cc2.8xlarge"
+            ],
+            "Default": "m3.2xlarge",
+            "Description": "Instance Type for Fusion nodes",
+            "Type": "String"
+        },
+        "EMRVersion": {
+            "AllowedValues": [
+                "5.3.0",
+                "5.4.0"
+            ],
+            "Default": "5.4.0",
+            "Description": "EMR Version",
+            "Type": "String"
+        },
+        "EncryptionAlgorithm": {
+            "AllowedValues": [
+                "AES256"
+            ],
+            "ConstraintDescription": "Must specify an algorithm",
+            "Default": "AES256",
+            "Description": "Algorithm to use for server-side encryption on S3 (default AES256)",
+            "Type": "String"
+        },
+        "FusionLicense": {
+            "Description": "S3 Path (format: s3://bucket-name/path) or URL of Fusion License (leave blank for a trial license)",
+            "Type": "String"
+        },
+        "FusionVersion": {
+            "AllowedValues": [
+                "2.10"
+            ],
+            "ConstraintDescription": "Supported versions of Fusion within AWS Marketplace",
+            "Default": "2.10",
+            "Description": "Fusion Version",
+            "Type": "String"
+        },
+        "KMSKey": {
+            "AllowedPattern": ".*",
+            "ConstraintDescription": "Must be a valid ARN",
+            "Default": "",
+            "Description": "ARN for KMS Encryption Key ID (leave blank to disable KMS encryption)",
+            "Type": "String"
+        },
+        "KeyName": {
+            "ConstraintDescription": "Must be the name of an existing EC2 KeyPair.",
+            "Description": "Name of an existing EC2 KeyPair within the AWS account; all instances will launch with this KeyPair",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "LocalFusionAccess": {
+            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+            "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/x",
+            "Default": "0.0.0.0/0",
+            "Description": "CIDR block for local fusion access",
+            "Type": "String"
+        },
+        "Password": {
+            "AllowedPattern": "[0-9A-z]+",
+            "ConstraintDescription": "The password value must be alphanumeric",
+            "Description": "The password for the WD Fusion admin.",
+            "NoEcho": true,
+            "Type": "String"
+        },
+        "PersistentStorage": {
+            "ConstraintDescription": "No more than 1024 GB per device (4 TB per node).",
+            "Default": "0",
+            "Description": "Allocated EBS storage for each block device (in GB; 4 devices per node); 0 indicates ephemeral storage only",
+            "MaxValue": "1024",
+            "MinValue": "0",
+            "Type": "Number"
+        },
+        "PublicSubnet1CIDR": {
+            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+            "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+            "Default": "10.0.128.0/20",
+            "Description": "CIDR block for the public DMZ subnet 2 located in Availability Zone 2",
+            "Type": "String"
+        },
+        "PublicSubnet2CIDR": {
+            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+            "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+            "Default": "10.0.144.0/20",
+            "Description": "CIDR block for the public DMZ subnet 3 located in Availability Zone 3",
+            "Type": "String"
+        },
+        "QSS3BucketName": {
+            "AllowedPattern": "^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$",
+            "ConstraintDescription": "must be a valid s3 bucket name",
+            "Default": "quickstart-reference",
+            "Description": "Quick Start S3 bucket name",
+            "Type": "String"
+        },
+        "QSS3KeyPrefix": {
+            "AllowedPattern": "^[0-9a-zA-Z-/]*$",
+            "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Default": "wandisco/fusion/latest",
+            "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Type": "String"
+        },
+        "S3Bucket": {
+            "AllowedPattern": "^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$",
+            "ConstraintDescription": "Must provide valid S3 Bucket name",
+            "Description": "The name of S3 bucket to synchronize data.",
+            "Type": "String"
+        },
+        "S3ServerEncryption": {
+            "AllowedValues": [
+                "Yes",
+                "No"
+            ],
+            "ConstraintDescription": "Must respond \"Yes\" or \"No\"",
+            "Default": "Yes",
+            "Description": "Enable server-side encryption on S3",
+            "Type": "String"
+        },
+        "SubscribeARN": {
+            "Description": "ARN Code of topic to email.",
+            "Type": "String"
+        },
+        "Username": {
+            "AllowedPattern": "[0-9A-z]+",
+            "ConstraintDescription": "The username value must be alphanumeric",
+            "Default": "admin",
+            "Description": "The name of the default admin user for WD Fusion",
+            "Type": "String"
+        },
+        "VPCAvailabilityZones": {
+            "Description": "AZ the public network will be created in (select 2)",
+            "Type": "List<AWS::EC2::AvailabilityZone::Name>"
+        },
+        "VPCCIDR": {
+            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+            "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+            "Default": "10.0.0.0/16",
+            "Description": "CIDR block for the VPC",
+            "Type": "String"
+        },
+        "ZoneName": {
+            "AllowedPattern": "^[^ ].+",
+            "ConstraintDescription": "ZoneName should not start with a space",
+            "Default": "AWSCloud",
+            "Description": "Name of Fusion Zone",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "AthenaCreateDbLambda": {
+            "DependsOn": [
+                "LambdaRole",
+                "AthenaS3Bucket"
+            ],
+            "Properties": {
+                "Code": {
+                    "ZipFile": {
+                        "Fn::Join": [
+                            "\n",
+                            [
+                                "#!/usr/bin/python",
+                                "import time",
+                                "import boto3",
+                                "import logging",
+                                "import cfnresponse",
+                                "logger=logging.getLogger()",
+                                "logger.setLevel(logging.INFO)",
+                                "athena=boto3.client('athena')",
+                                "CFN_REQUEST_TYPE=\"RequestType\"",
+                                "CFN_RESOURCE_PROPERTIES=\"ResourceProperties\"",
+                                "SUCCEEDED=\"SUCCEEDED\"",
+                                "FAILED=\"FAILED\"",
+                                "CANCELLED=\"CANCELLED\"",
+                                "class AthenaCloudFormationResource(object):",
+                                " def __init__(self):",
+                                "  self._delegate={'Create':self.create,'Update':self.update,'Delete':self.delete}",
+                                " def __call__(self,event,context):",
+                                "  try:",
+                                "   request=event[CFN_REQUEST_TYPE]",
+                                "   self._delegate[request](event,context)",
+                                "  except Exception as e:",
+                                "   logger.exception(\"Unable to complete CFN request {}\".format(str(e)))",
+                                "   cfnresponse.send(event,context,cfnresponse.FAILED,{})",
+                                " def create(self,event,context):",
+                                "  logger.info(\"Got Event: {}\".format(event))",
+                                "  props=event[CFN_RESOURCE_PROPERTIES]",
+                                "  tmp_bucket=props[\"AthenaBucket\"]",
+                                "  database_name=props[\"DatabaseName\"]",
+                                "  database_result='s3://{}'.format(tmp_bucket)",
+                                "  result=AthenaCloudFormationResource.__create_db(database_name,database_result)",
+                                "  if result:",
+                                "   cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
+                                "  else:",
+                                "   cfnresponse.send(event,context,cfnresponse.FAILED,{})",
+                                " def update(self,event,context):",
+                                "  cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
+                                " def delete(self,event,context):",
+                                "  props=event[CFN_RESOURCE_PROPERTIES]",
+                                "  tmp_bucket=props[\"AthenaBucket\"]",
+                                "  database_name=props[\"DatabaseName\"]",
+                                "  database_result='s3://{}'.format(tmp_bucket)",
+                                "  if AthenaCloudFormationResource.__drop_db(database_name,database_result):",
+                                "   s3=boto3.resource('s3')",
+                                "   bucket=s3.Bucket(tmp_bucket)",
+                                "   bucket.objects.all().delete()",
+                                "   cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
+                                "  else:",
+                                "   cfnresponse.send(event,context,cfnresponse.FAILED,{})",
+                                " @staticmethod",
+                                " def __create_db(name,database_result):",
+                                "  query='CREATE DATABASE IF NOT EXISTS {} LOCATION \\'{}/\\''.format(name,database_result)",
+                                "  logger.info(\"Execute: {}\".format(query))",
+                                "  response=athena.start_query_execution(QueryString=query,ResultConfiguration={'OutputLocation':'{}/output'.format(database_result)})",
+                                "  logger.info(\"ExecuteResponse: {}\".format(response))",
+                                "  return AthenaCloudFormationResource.__check_state(response['QueryExecutionId'])",
+                                " @staticmethod",
+                                " def __drop_db(name,database_result):",
+                                "  response=athena.start_query_execution(QueryString='DROP DATABASE {}'.format(name),ResultConfiguration={'OutputLocation':'{}/output'.format(database_result)})",
+                                "  logger.info(\"ExecuteResponse: {}\".format(response))",
+                                "  return AthenaCloudFormationResource.__check_state(response['QueryExecutionId'])",
+                                " @staticmethod",
+                                " def __check_state(execution_id):",
+                                "  running=True",
+                                "  while running:",
+                                "   execution_response=athena.get_query_execution(QueryExecutionId=execution_id)",
+                                "   logger.info(\"QueryResponse: {}\".format(execution_response))",
+                                "   execution_state=execution_response['QueryExecution']['Status']['State']",
+                                "   if execution_state in[SUCCEEDED]:",
+                                "    return True",
+                                "   elif execution_state in[FAILED,CANCELLED]:",
+                                "    return False",
+                                "   else:",
+                                "    time.sleep(1)",
+                                "handler=AthenaCloudFormationResource()",
+                                "# Created by pyminifier (https://github.com/liftoff/pyminifier)",
+                                ""
+                            ]
+                        ]
+                    }
+                },
+                "Handler": "index.handler",
+                "MemorySize": 128,
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaRole",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.6",
+                "Timeout": 300
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "AthenaCreateTableLambda": {
+            "DependsOn": [
+                "LambdaRole",
+                "AthenaS3Bucket"
+            ],
+            "Properties": {
+                "Code": {
+                    "ZipFile": {
+                        "Fn::Join": [
+                            "\n",
+                            [
+                                "#!/usr/bin/python",
+                                "import time",
+                                "import boto3",
+                                "import logging",
+                                "import cfnresponse",
+                                "logger=logging.getLogger()",
+                                "logger.setLevel(logging.INFO)",
+                                "athena=boto3.client('athena')",
+                                "CFN_REQUEST_TYPE=\"RequestType\"",
+                                "CFN_RESOURCE_PROPERTIES=\"ResourceProperties\"",
+                                "SUCCEEDED=\"SUCCEEDED\"",
+                                "FAILED=\"FAILED\"",
+                                "CANCELLED=\"CANCELLED\"",
+                                "class AthenaCloudFormationResource(object):",
+                                " def __init__(self):",
+                                "  self._delegate={'Create':self.create,'Update':self.update,'Delete':self.delete}",
+                                " def __call__(self,event,context):",
+                                "  try:",
+                                "   request=event[CFN_REQUEST_TYPE]",
+                                "   self._delegate[request](event,context)",
+                                "  except Exception as e:",
+                                "   logger.exception(\"Unable to complete CFN request {}\".format(str(e)))",
+                                "   cfnresponse.send(event,context,cfnresponse.FAILED,{})",
+                                " def create(self,event,context):",
+                                "  logger.info(\"Got Event: {}\".format(event))",
+                                "  props=event[CFN_RESOURCE_PROPERTIES]",
+                                "  tmp_bucket=props[\"AthenaBucket\"]",
+                                "  sync_bucket=props[\"SyncBucket\"]",
+                                "  database_name=props[\"DatabaseName\"]",
+                                "  database_result='s3://{}'.format(tmp_bucket)",
+                                "  sync_result='s3://{}'.format(sync_bucket)",
+                                "  result=AthenaCloudFormationResource.__create_taxi_table('{}.taxi_tripdata'.format(database_name),sync_result,database_result)",
+                                "  if result:",
+                                "   cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
+                                "  else:",
+                                "   cfnresponse.send(event,context,cfnresponse.FAILED,{})",
+                                " def update(self,event,context):",
+                                "  cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
+                                " def delete(self,event,context):",
+                                "  props=event[CFN_RESOURCE_PROPERTIES]",
+                                "  tmp_bucket=props[\"AthenaBucket\"]",
+                                "  database_name=props[\"DatabaseName\"]",
+                                "  database_result='s3://{}'.format(tmp_bucket)",
+                                "  if AthenaCloudFormationResource.__drop_table('{}.taxi_tripdata'.format(database_name),database_result):",
+                                "   cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
+                                "  else:",
+                                "   cfnresponse.send(event,context,cfnresponse.FAILED,{})",
+                                " @staticmethod",
+                                " def __create_taxi_table(name,sync_result,database_result):",
+                                "  query_string=\"\"\"",
+                                "          CREATE EXTERNAL TABLE IF NOT EXISTS {} (vendor_id TINYINT, lpep_pickup_datetime TIMESTAMP, lpep_dropoff_datetime TIMESTAMP, store_and_fwd_flag VARCHAR(1), rate_code_id TINYINT, pickup_longitude DOUBLE, pickup_latitude DOUBLE, dropoff_longitude DOUBLE, dropoff_latitude DOUBLE, passenger_count TINYINT, trip_distance FLOAT, fare_amount DECIMAL(10,2), extra DECIMAL(10,2), mta_tax DECIMAL(10,2), tip_amount DECIMAL(10,2), tolls_amount DECIMAL(10,2), ehail_fee DECIMAL(10,2), improvement_surcharge DECIMAL(10,2), total_amount DECIMAL(10,2), payment_type TINYINT, trip_type TINYINT ) ",
+                                "            ROW FORMAT DELIMITED FIELDS TERMINATED BY ','",
+                                "            STORED AS TEXTFILE ",
+                                "            LOCATION '{}/'",
+                                "        \"\"\"  .format(name, sync_result)",
+                                "  response=athena.start_query_execution(QueryString=query_string,ResultConfiguration={'OutputLocation':'{}/output'.format(database_result)})",
+                                "  logger.info(query_string)",
+                                "  logger.info(\"ExecuteResponse: {}\".format(response))",
+                                "  return AthenaCloudFormationResource.__check_state(response['QueryExecutionId'])",
+                                " @staticmethod",
+                                " def __drop_table(name,database_result):",
+                                "  response=athena.start_query_execution(QueryString='DROP TABLE {}'.format(name),ResultConfiguration={'OutputLocation':'{}/output'.format(database_result)})",
+                                "  logger.info(\"ExecuteResponse: {}\".format(response))",
+                                "  return AthenaCloudFormationResource.__check_state(response['QueryExecutionId'])",
+                                " @staticmethod",
+                                " def __check_state(execution_id):",
+                                "  running=True",
+                                "  while running:",
+                                "   execution_response=athena.get_query_execution(QueryExecutionId=execution_id)",
+                                "   logger.info(\"QueryResponse: {}\".format(execution_response))",
+                                "   execution_state=execution_response['QueryExecution']['Status']['State']",
+                                "   if execution_state in[SUCCEEDED]:",
+                                "    return True",
+                                "   elif execution_state in[FAILED,CANCELLED]:",
+                                "    return False",
+                                "   else:",
+                                "    time.sleep(1)",
+                                "handler=AthenaCloudFormationResource()",
+                                "# Created by pyminifier (https://github.com/liftoff/pyminifier)",
+                                ""
+                            ]
+                        ]
+                    }
+                },
+                "Handler": "index.handler",
+                "MemorySize": 128,
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaRole",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.6",
+                "Timeout": 300
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "AthenaS3Bucket": {
+            "Properties": {
+                "BucketName": {
+                    "Ref": "AthenaBucketName"
+                }
+            },
+            "Type": "AWS::S3::Bucket"
+        },
+        "FusionSecurityGroup": {
+            "DependsOn": [
+                "VPCStack"
+            ],
+            "Properties": {
+                "GroupDescription": "Enable WD Fusion remote access",
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": {
+                            "Ref": "LocalFusionAccess"
+                        },
+                        "FromPort": "8023",
+                        "IpProtocol": "tcp",
+                        "ToPort": "8023"
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "LocalFusionAccess"
+                        },
+                        "FromPort": "8023",
+                        "IpProtocol": "tcp",
+                        "ToPort": "8024"
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "LocalFusionAccess"
+                        },
+                        "FromPort": "8082",
+                        "IpProtocol": "tcp",
+                        "ToPort": "8082"
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "LocalFusionAccess"
+                        },
+                        "FromPort": "8083",
+                        "IpProtocol": "tcp",
+                        "ToPort": "8083"
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "LocalFusionAccess"
+                        },
+                        "FromPort": "6444",
+                        "IpProtocol": "tcp",
+                        "ToPort": "6444"
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "LocalFusionAccess"
+                        },
+                        "FromPort": "7000",
+                        "IpProtocol": "tcp",
+                        "ToPort": "7555"
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "LocalFusionAccess"
+                        },
+                        "FromPort": "9000",
+                        "IpProtocol": "tcp",
+                        "ToPort": "9500"
+                    }
+                ],
+                "VpcId": {
+                    "Fn::GetAtt": [
+                        "VPCStack",
+                        "Outputs.VPCID"
+                    ]
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "FusionStack": {
+            "DependsOn": [
+                "FusionSecurityGroup"
+            ],
+            "Properties": {
+                "Parameters": {
+                    "ClusterInstanceCount": {
+                        "Ref": "ClusterInstanceCount"
+                    },
+                    "ClusterName": {
+                        "Ref": "ClusterName"
+                    },
+                    "ClusterNodeType": {
+                        "Ref": "ClusterNodeType"
+                    },
+                    "EMRVersion": {
+                        "Ref": "EMRVersion"
+                    },
+                    "EncryptionAlgorithm": {
+                        "Ref": "EncryptionAlgorithm"
+                    },
+                    "FusionLicense": {
+                        "Ref": "FusionLicense"
+                    },
+                    "FusionVersion": {
+                        "Ref": "FusionVersion"
+                    },
+                    "KMSKey": {
+                        "Ref": "KMSKey"
+                    },
+                    "KeyName": {
+                        "Ref": "KeyName"
+                    },
+                    "Password": {
+                        "Ref": "Password"
+                    },
+                    "PersistentStorage": {
+                        "Ref": "PersistentStorage"
+                    },
+                    "QSS3BucketName": {
+                        "Ref": "QSS3BucketName"
+                    },
+                    "QSS3KeyPrefix": {
+                        "Ref": "QSS3KeyPrefix"
+                    },
+                    "S3Bucket": {
+                        "Ref": "S3Bucket"
+                    },
+                    "S3ServerEncryption": {
+                        "Ref": "S3ServerEncryption"
+                    },
+                    "SecurityGroupId": {
+                        "Ref": "FusionSecurityGroup"
+                    },
+                    "SubnetIdA": {
+                        "Fn::GetAtt": [
+                            "VPCStack",
+                            "Outputs.PublicSubnet1ID"
+                        ]
+                    },
+                    "SubnetIdB": {
+                        "Fn::GetAtt": [
+                            "VPCStack",
+                            "Outputs.PublicSubnet1ID"
+                        ]
+                    },
+                    "SubscribeARN": {
+                        "Ref": "SubscribeARN"
+                    },
+                    "UserName": {
+                        "Ref": "Username"
+                    },
+                    "VpcId": {
+                        "Fn::GetAtt": [
+                            "VPCStack",
+                            "Outputs.VPCID"
+                        ]
+                    },
+                    "ZoneName": {
+                        "Ref": "ZoneName"
+                    }
+                },
+                "Tags": [
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    }
+                ],
+                "TemplateURL": {
+                    "Fn::Join": [
+                        "/",
+                        [
+                            {
+                                "Fn::FindInMap": [
+                                    "AWSInfoRegionMap",
+                                    {
+                                        "Ref": "AWS::Region"
+                                    },
+                                    "S3URL"
+                                ]
+                            },
+                            {
+                                "Ref": "QSS3BucketName"
+                            },
+                            {
+                                "Ref": "QSS3KeyPrefix"
+                            },
+                            "templates/quickstart-data-lake-wandisco-fusion.template"
+                        ]
+                    ]
+                }
+            },
+            "Type": "AWS::CloudFormation::Stack"
+        },
+        "LabAthenaDb": {
+            "DependsOn": [
+                "AthenaCreateDbLambda"
+            ],
+            "Properties": {
+                "AthenaBucket": {
+                    "Ref": "AthenaBucketName"
+                },
+                "DatabaseName": {
+                    "Fn::Sub": "wandisco_fusion_db_lab_${AWS::StackName}"
+                },
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "AthenaCreateDbLambda",
+                        "Arn"
+                    ]
+                },
+                "SyncBucket": {
+                    "Ref": "S3Bucket"
+                }
+            },
+            "Type": "Custom::AthenaTripDb"
+        },
+        "LabAthenaTable": {
+            "DependsOn": [
+                "LabAthenaDb",
+                "AthenaCreateTableLambda"
+            ],
+            "Properties": {
+                "AthenaBucket": {
+                    "Ref": "AthenaBucketName"
+                },
+                "DatabaseName": {
+                    "Fn::Sub": "wandisco_fusion_db_lab_${AWS::StackName}"
+                },
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "AthenaCreateTableLambda",
+                        "Arn"
+                    ]
+                },
+                "SyncBucket": {
+                    "Ref": "S3Bucket"
+                }
+            },
+            "Type": "Custom::AthenaTripDb"
+        },
+        "LambdaRole": {
+            "DependsOn": [
+                "AthenaS3Bucket"
+            ],
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents",
+                                        "logs:CreateLogGroup"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "Version": "2012-10-17"
+                        },
+                        "PolicyName": "lambda-log-access"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "athena:*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": [
+                                        "*"
+                                    ]
+                                },
+                                {
+                                    "Action": [
+                                        "s3:*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": [
+                                        "arn:aws:s3:::*"
+                                    ]
+                                }
+                            ],
+                            "Version": "2012-10-17"
+                        },
+                        "PolicyName": "lambda-athena-access"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "VPCStack": {
+            "Properties": {
+                "Parameters": {
+                    "AvailabilityZones": {
+                        "Fn::Join": [
+                            ",",
+                            {
+                                "Ref": "VPCAvailabilityZones"
+                            }
+                        ]
+                    },
+                    "CreatePrivateSubnets": "false",
+                    "KeyPairName": {
+                        "Ref": "KeyName"
+                    },
+                    "NumberOfAZs": 2,
+                    "PublicSubnet1CIDR": {
+                        "Ref": "PublicSubnet1CIDR"
+                    },
+                    "PublicSubnet2CIDR": {
+                        "Ref": "PublicSubnet2CIDR"
+                    },
+                    "VPCCIDR": {
+                        "Ref": "VPCCIDR"
+                    }
+                },
+                "Tags": [
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    }
+                ],
+                "TemplateURL": {
+                    "Fn::Join": [
+                        "/",
+                        [
+                            {
+                                "Fn::FindInMap": [
+                                    "AWSInfoRegionMap",
+                                    {
+                                        "Ref": "AWS::Region"
+                                    },
+                                    "S3URL"
+                                ]
+                            },
+                            {
+                                "Ref": "QSS3BucketName"
+                            },
+                            {
+                                "Ref": "QSS3KeyPrefix"
+                            },
+                            "submodules/quickstart-aws-vpc/templates/aws-vpc.template"
+                        ]
+                    ]
+                }
+            },
+            "Type": "AWS::CloudFormation::Stack"
+        }
+    }
+}
