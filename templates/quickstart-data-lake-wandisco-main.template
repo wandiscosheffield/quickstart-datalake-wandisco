@@ -55,7 +55,7 @@
             "ParameterGroups": [
                 {
                     "Label": {
-                        "default": ""
+                        "default": "General Parameters"
                     },
                     "Parameters": [
                         "KeyName"
@@ -150,7 +150,7 @@
                     "default": "Fusion License (Optional)"
                 },
                 "FusionVersion": {
-                    "default": ""
+                    "default": "Fusion Version"
                 },
                 "KMSKey": {
                     "default": "KMS Key (Optional)"
