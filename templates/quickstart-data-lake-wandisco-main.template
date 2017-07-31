@@ -162,7 +162,7 @@
                     "default": "Local Fusion Access CIDR"
                 },
                 "Password": {
-                    "default": "Password"
+                    "default": "Fusion Admin Password"
                 },
                 "PersistentStorage": {
                     "default": "Persistent Storage"
@@ -189,7 +189,7 @@
                     "default": "ARN Topic code to publish messages to (Optional)"
                 },
                 "Username": {
-                    "default": "Username"
+                    "default": "Fusion Admin Username"
                 },
                 "VPCAvailabilityZones": {
                     "default": "Availability Zones"
@@ -354,7 +354,7 @@
         "S3Bucket": {
             "AllowedPattern": "^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$",
             "ConstraintDescription": "Must provide valid S3 Bucket name",
-            "Description": "The name of S3 bucket to synchronize data.",
+            "Description": "The name of S3 bucket to synchronize local Hadoop HDFS drive data.",
             "Type": "String"
         },
         "S3ServerEncryption": {
