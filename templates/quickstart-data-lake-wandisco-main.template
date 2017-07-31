@@ -393,7 +393,7 @@
             "AllowedPattern": "^[^ ].+",
             "ConstraintDescription": "ZoneName should not start with a space",
             "Default": "AWSCloud",
-            "Description": "Name of Fusion Zone",
+            "Description": "Name used to identify the zone in which the server operates",
             "Type": "String"
         }
     },
