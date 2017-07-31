@@ -1,0 +1,37 @@
+version: "3"
+
+services:
+  fusion:
+    image: wandisco/sandbox-fusion:latest
+    ports:
+      - "50010:50010"
+      - "50020:50020"
+      - "50070:50070"
+      - "50090:50090"
+      - "8020:8020"
+      - "9000:9000"
+      - "10020:10020"
+      - "19888:19888"
+      - "8030:8030"
+      - "8031:8031"
+      - "8032:8032"
+      - "8033:8033"
+      - "8040:8040"
+      - "8042:8042"
+      - "8088:8088"
+      - "10000:10000"
+      - "10001:10001"
+      - "8083:8083"
+    privileged: true
+    environment:
+      AWS_FUSION_HOST: 52.40.25.56
+    networks:
+      - wdfusion-network
+networks:
+  wdfusion-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.5.0.0/16
+
