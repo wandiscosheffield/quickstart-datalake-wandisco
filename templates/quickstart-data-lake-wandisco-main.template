@@ -91,8 +91,7 @@
                     "Parameters": [
                         "S3Bucket",
                         "KMSKey",
-                        "S3ServerEncryption",
-                        "EncryptionAlgorithm"
+                        "S3ServerEncryption"
                     ]
                 },
                 {
@@ -103,7 +102,6 @@
                         "ZoneName",
                         "Username",
                         "Password",
-                        "FusionVersion",
                         "SubscribeARN",
                         "EMRVersion",
                         "FusionLicense"
@@ -143,14 +141,8 @@
                 "EMRVersion": {
                     "default": "EMR Version"
                 },
-                "EncryptionAlgorithm": {
-                    "default": "S3 Server-side Encryption Algorithm"
-                },
                 "FusionLicense": {
                     "default": "Fusion License (Optional)"
-                },
-                "FusionVersion": {
-                    "default": "Fusion Version"
                 },
                 "KMSKey": {
                     "default": "KMS Key (Optional)"
@@ -209,15 +201,9 @@
             "Type": "String"
         },
         "ClusterInstanceCount": {
-            "AllowedValues": [
-                "1",
-                "2",
-                "3",
-                "4",
-                "5"
-            ],
             "Default": "1",
             "Description": "Size of Fusion Server cluster",
+            "MinValue": "1",
             "Type": "Number"
         },
         "ClusterName": {
@@ -267,26 +253,8 @@
             "Description": "EMR Version",
             "Type": "String"
         },
-        "EncryptionAlgorithm": {
-            "AllowedValues": [
-                "AES256"
-            ],
-            "ConstraintDescription": "Must specify an algorithm",
-            "Default": "AES256",
-            "Description": "Algorithm to use for server-side encryption on S3 (default AES256)",
-            "Type": "String"
-        },
         "FusionLicense": {
             "Description": "S3 Path (format: s3://bucket-name/path) or URL of Fusion License (leave blank for a trial license)",
-            "Type": "String"
-        },
-        "FusionVersion": {
-            "AllowedValues": [
-                "2.10"
-            ],
-            "ConstraintDescription": "Supported versions of Fusion within AWS Marketplace",
-            "Default": "2.10",
-            "Description": "Fusion Version",
             "Type": "String"
         },
         "KMSKey": {
@@ -709,15 +677,11 @@
                     "EMRVersion": {
                         "Ref": "EMRVersion"
                     },
-                    "EncryptionAlgorithm": {
-                        "Ref": "EncryptionAlgorithm"
-                    },
+                    "EncryptionAlgorithm": "AES256",
                     "FusionLicense": {
                         "Ref": "FusionLicense"
                     },
-                    "FusionVersion": {
-                        "Ref": "FusionVersion"
-                    },
+                    "FusionVersion": "2.10",
                     "KMSKey": {
                         "Ref": "KMSKey"
                     },
