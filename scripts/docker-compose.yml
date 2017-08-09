@@ -2,7 +2,7 @@ version: "3"
 
 services:
   fusion:
-    image: wandisco/sandbox-fusion:latest
+    image: wandisco/aws-fusion-lab:latest
     ports:
       - "50010:50010"
       - "50020:50020"
