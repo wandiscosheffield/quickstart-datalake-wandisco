@@ -78,10 +78,10 @@
     },
     "FusionVersion": {
       "Type": "String",
-      "Default": "2.10",
+      "Default": "2.10.3.1",
       "Description": "Fusion Version",
       "AllowedValues": [
-        "2.10"
+        "2.10.3.1"
       ],
       "ConstraintDescription": "Supported versions of Fusion within AWS Marketplace"
     },
