@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "WANDisco Fusion Getting Started full stack template: This template will deploy WANDisco Fusion into its own VPC and startup Athena to allow for sync data validation. ",
+    "Description": "WANdisco Fusion Getting Started full stack template: This template will deploy WANdisco Fusion into its own VPC and startup Athena to allow for sync data validation. ",
     "Mappings": {
         "AWSInfoRegionMap": {
             "ap-northeast-1": {
