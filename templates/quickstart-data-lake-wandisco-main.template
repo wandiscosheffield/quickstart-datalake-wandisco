@@ -99,7 +99,7 @@
                     "default": "KMS Key (Optional)"
                 },
                 "KeyName": {
-                    "default": "Key Name"
+                    "default": "EC2 key pair name"
                 },
                 "LocalFusionAccess": {
                     "default": "Local Fusion Access CIDR"
