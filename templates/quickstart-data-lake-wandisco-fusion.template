@@ -190,8 +190,8 @@
   },
   "Mappings": {
     "FusionVersionInstaller": {
-      "2.10": {
-        "FileURI": "s3://wandisco-public-files/fusion/sturdy/fusion-ui-server-emr_rpm_installer_2.10.3_sturdy.sh"
+      "2.10.3.1": {
+        "FileURI": "s3://wandisco-public-files/fusion/fusion-ui-server-emr_rpm_installer_2.10.3.1.sh"
       }
     },
     "AWSRegionToAMI": {
@@ -725,10 +725,10 @@
                 },
                 "'\n",
                 "EOF\n",
-                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/common-2_10_3.sh /tmp/common-2_10_3.sh\n" },
-                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/amazonCompanionScript-2_10_3.sh /tmp/amazonCompanionScript-2_10_3.sh\n" },
-                "chmod +x /tmp/amazonCompanionScript-2_10_3.sh\n",
-                "/tmp/amazonCompanionScript-2_10_3.sh >> /var/log/cloud-init-output.log\n",
+                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n" },
+                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n" },
+                "chmod +x /tmp/amazonCompanionScript-2_10_3_1.sh\n",
+                "/tmp/amazonCompanionScript-2_10_3_1.sh >> /var/log/cloud-init-output.log\n",
                 "\n"
               ]
             ]

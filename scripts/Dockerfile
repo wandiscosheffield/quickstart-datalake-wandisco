@@ -111,7 +111,7 @@ RUN echo '' >> /etc/profile \
  && echo 'export PATH=$PATH' >> /etc/profile
 
 
-ENV FUSION_CORE_INSTALLER fusion-hcfs-asf-2.7.0-client-hdfs_2.10.3-SNAPSHOT-2416_all.deb
+ENV FUSION_CORE_INSTALLER fusion-hcfs-asf-2.7.0-client-hdfs_2.10.3.1-2485_all.deb
 COPY $FUSION_CORE_INSTALLER $FUSION_CORE_INSTALLER
 RUN dpkg -i $FUSION_CORE_INSTALLER \
  && rm $FUSION_CORE_INSTALLER
@@ -119,7 +119,7 @@ RUN dpkg -i $FUSION_CORE_INSTALLER \
 COPY silent_install_env.sh /opt/fusion/silent_install_env.sh
 ENV SILENT_CONFIG_PATH /opt/fusion/silent_install_env.sh
 
-ENV FUSION_UI_INSTALLER fusion-ui-server-asf_deb_installer.4.sh
+ENV FUSION_UI_INSTALLER fusion-ui-server-asf_deb_installer.6.sh
 COPY $FUSION_UI_INSTALLER /opt/fusion/$FUSION_UI_INSTALLER
 RUN chmod 755 /opt/fusion/$FUSION_UI_INSTALLER \
  && /opt/fusion/$FUSION_UI_INSTALLER

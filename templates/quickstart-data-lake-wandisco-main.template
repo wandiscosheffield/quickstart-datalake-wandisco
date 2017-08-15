@@ -277,8 +277,8 @@
             "Type": "String"
         },
         "Password": {
-            "AllowedPattern": "[0-9A-z]+",
-            "ConstraintDescription": "The password value must be alphanumeric",
+            "AllowedPattern": "[!@#$&*0-9A-z]+",
+            "ConstraintDescription": "The password value must be alphanumeric or special character (!@#$&*)",
             "Description": "The password for the WD Fusion admin.",
             "NoEcho": true,
             "Type": "String"
@@ -681,7 +681,7 @@
                     "FusionLicense": {
                         "Ref": "FusionLicense"
                     },
-                    "FusionVersion": "2.10",
+                    "FusionVersion": "2.10.3.1",
                     "KMSKey": {
                         "Ref": "KMSKey"
                     },
@@ -746,7 +746,7 @@
                     }
                 ],
                 "TemplateURL": {
-                    "Fn::Sub": "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/quickstart-data-lake-wandisco-fusion.template"
+                    "Fn::Sub": "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/templates/quickstart-data-lake-wandisco-fusion.template"
                 }
             },
             "Type": "AWS::CloudFormation::Stack"
@@ -871,6 +871,95 @@
             },
             "Type": "AWS::IAM::Role"
         },
+        "S3DeleteLambda": {
+            "DependsOn": [
+                "LambdaRole"
+            ],
+            "Properties": {
+                "Code": {
+                    "ZipFile": {
+                        "Fn::Join": [
+                            "\n",
+                            [
+                                "#!/usr/bin/python",
+                                "import time",
+                                "import boto3",
+                                "import logging",
+                                "import cfnresponse",
+                                "logger=logging.getLogger()",
+                                "logger.setLevel(logging.INFO)",
+                                "CFN_REQUEST_TYPE=\"RequestType\"",
+                                "CFN_RESOURCE_PROPERTIES=\"ResourceProperties\"",
+                                "SUCCEEDED=\"SUCCEEDED\"",
+                                "FAILED=\"FAILED\"",
+                                "CANCELLED=\"CANCELLED\"",
+                                "class S3Resource(object):",
+                                " def __init__(self):",
+                                "  self._delegate={'Create':self.create,'Update':self.update,'Delete':self.delete}",
+                                " def __call__(self,event,context):",
+                                "  try:",
+                                "   request=event[CFN_REQUEST_TYPE]",
+                                "   self._delegate[request](event,context)",
+                                "  except Exception as e:",
+                                "   logger.exception(\"Unable to complete CFN request {}\".format(str(e)))",
+                                "   cfnresponse.send(event,context,cfnresponse.FAILED,{})",
+                                " def create(self,event,context):",
+                                "  cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
+                                " def update(self,event,context):",
+                                "  cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
+                                " def delete(self,event,context):",
+                                "  props=event[CFN_RESOURCE_PROPERTIES]",
+                                "  tmp_bucket=props[\"Bucket\"]",
+                                "  s3=boto3.resource('s3')",
+                                "  bucket=s3.Bucket(tmp_bucket)",
+                                "  bucket.objects.all().delete()",
+                                "  cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
+                                "handler=S3Resource()",
+                                "# Created by pyminifier (https://github.com/liftoff/pyminifier)",
+                                ""
+                            ]
+                        ]
+                    }
+                },
+                "Handler": "index.handler",
+                "MemorySize": 128,
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaRole",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.6",
+                "Timeout": 300
+            },
+            "Type": "AWS::Lambda::Function"
+        },
+        "S3DeleteResource": {
+            "DependsOn": [
+                "S3DeleteLambda",
+                "SyncS3Bucket"
+            ],
+            "Properties": {
+                "Bucket": {
+                    "Ref": "S3Bucket"
+                },
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "S3DeleteLambda",
+                        "Arn"
+                    ]
+                }
+            },
+            "Type": "Custom::S3Delete"
+        },
+        "SyncS3Bucket": {
+            "Properties": {
+                "BucketName": {
+                    "Ref": "S3Bucket"
+                }
+            },
+            "Type": "AWS::S3::Bucket"
+        },
         "VPCStack": {
             "Properties": {
                 "Parameters": {
@@ -906,7 +995,7 @@
                     }
                 ],
                 "TemplateURL": {
-                    "Fn::Sub": "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template"
+                    "Fn::Sub": "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}/submodules/quickstart-aws-vpc/templates/aws-vpc.template"
                 }
             },
             "Type": "AWS::CloudFormation::Stack"
