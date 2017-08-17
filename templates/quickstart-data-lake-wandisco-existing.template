@@ -600,7 +600,12 @@
                                     ],
                                     "Effect": "Allow",
                                     "Resource": [
-                                        "arn:aws:s3:::*"
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${AthenaBucketName}"
+                                        },
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${AthenaBucketName}/*"
+                                        }
                                     ]
                                 }
                             ],
@@ -953,6 +958,9 @@
                                     ],
                                     "Effect": "Allow",
                                     "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${S3Bucket}"
+                                        },
                                         {
                                             "Fn::Sub": "arn:aws:s3:::${S3Bucket}/*"
                                         }
