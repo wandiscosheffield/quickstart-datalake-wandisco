@@ -4,6 +4,7 @@ import time
 import boto3
 import logging
 import cfnresponse
+import re
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -38,7 +39,7 @@ class AthenaCloudFormationResource(object):
 
         tmp_bucket = props["AthenaBucket"]
         sync_bucket = props["SyncBucket"]
-        database_name = props["DatabaseName"]
+        database_name = re.sub("[^A-Za-z0-9]+", "_", props["DatabaseName"])
 
         database_result = 's3://{}'.format(tmp_bucket)
         sync_result = 's3://{}'.format(sync_bucket)
@@ -56,7 +57,7 @@ class AthenaCloudFormationResource(object):
     def delete(self, event, context):
         props = event[CFN_RESOURCE_PROPERTIES]
         tmp_bucket = props["AthenaBucket"]
-        database_name = props["DatabaseName"]
+        database_name = re.sub("[^A-Za-z0-9]+", "_", props["DatabaseName"])
 
         database_result = 's3://{}'.format(tmp_bucket)
 

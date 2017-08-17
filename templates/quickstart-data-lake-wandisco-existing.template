@@ -1,6 +1,16 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "WANdisco Fusion Getting Started full stack template: This template will deploy WANdisco Fusion into its own VPC and startup Athena to allow for sync data validation. ",
+    "Conditions": {
+        "AthenaCreateCondition": {
+            "Fn::Equals": [
+                {
+                    "Ref": "AthenaCreateTable"
+                },
+                "true"
+            ]
+        }
+    },
+    "Description": "WANdisco Fusion Getting Started stack template: This template will deploy WANdisco Fusion into an existing VPC and optionally startup Athena to allow for sync data validation.",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
@@ -62,6 +72,7 @@
                         "default": "Athena Configuration"
                     },
                     "Parameters": [
+                        "AthenaCreateTable",
                         "AthenaBucketName"
                     ]
                 },
@@ -78,6 +89,9 @@
             "ParameterLabels": {
                 "AthenaBucketName": {
                     "default": "Athena Output Bucket"
+                },
+                "AthenaCreateTable": {
+                    "default": "Create Athena Table"
                 },
                 "ClusterInstanceCount": {
                     "default": "Cluster Instance Count"
@@ -122,10 +136,10 @@
                     "default": "S3 Server-side Encryption Algorithm"
                 },
                 "SubnetIdA": {
-                    "default": "Subnet ID 1"
+                    "default": "VPC Subnet ID for Zone 1"
                 },
                 "SubnetIdB": {
-                    "default": "Subnet ID 2"
+                    "default": "VPC Subnet ID for Zone 2"
                 },
                 "SubscribeARN": {
                     "default": "ARN Topic code to publish messages to (Optional)"
@@ -145,6 +159,15 @@
     "Parameters": {
         "AthenaBucketName": {
             "Description": "Athena Output Bucket",
+            "Type": "String"
+        },
+        "AthenaCreateTable": {
+            "AllowedValues": [
+                "true",
+                "false"
+            ],
+            "Default": "true",
+            "Description": "Specify to create athena table",
             "Type": "String"
         },
         "ClusterInstanceCount": {
@@ -288,7 +311,7 @@
         },
         "VPCID": {
             "Description": "The Id of the VPC to use. Your Fusion instance will be launched in this Virtual Private Cloud. You need to select an existing VPC, and you must ensure that you have configured that VPC previously in a way that allows bi-directional network connectivity with all your other Fusion servers. The VPC must have an appropriate IP address range, associated subnet, route table, network gateway, and security settings. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
-            "Type": "List<AWS::EC2::AvailabilityZone::Name>"
+            "Type": "AWS::EC2::VPC::Id"
         },
         "ZoneName": {
             "AllowedPattern": "^[^ ].+",
@@ -300,8 +323,9 @@
     },
     "Resources": {
         "AthenaCreateDbLambda": {
+            "Condition": "AthenaCreateCondition",
             "DependsOn": [
-                "LambdaRole",
+                "AthenaLambdaRole",
                 "AthenaS3Bucket"
             ],
             "Properties": {
@@ -315,6 +339,7 @@
                                 "import boto3",
                                 "import logging",
                                 "import cfnresponse",
+                                "import re",
                                 "logger=logging.getLogger()",
                                 "logger.setLevel(logging.INFO)",
                                 "athena=boto3.client('athena')",
@@ -337,7 +362,7 @@
                                 "  logger.info(\"Got Event: {}\".format(event))",
                                 "  props=event[CFN_RESOURCE_PROPERTIES]",
                                 "  tmp_bucket=props[\"AthenaBucket\"]",
-                                "  database_name=props[\"DatabaseName\"]",
+                                "  database_name=re.sub(\"[^A-Za-z0-9]+\",\"_\",props[\"DatabaseName\"])",
                                 "  database_result='s3://{}'.format(tmp_bucket)",
                                 "  result=AthenaCloudFormationResource.__create_db(database_name,database_result)",
                                 "  if result:",
@@ -349,7 +374,7 @@
                                 " def delete(self,event,context):",
                                 "  props=event[CFN_RESOURCE_PROPERTIES]",
                                 "  tmp_bucket=props[\"AthenaBucket\"]",
-                                "  database_name=props[\"DatabaseName\"]",
+                                "  database_name=re.sub(\"[^A-Za-z0-9]+\",\"_\",props[\"DatabaseName\"])",
                                 "  database_result='s3://{}'.format(tmp_bucket)",
                                 "  if AthenaCloudFormationResource.__drop_db(database_name,database_result):",
                                 "   s3=boto3.resource('s3')",
@@ -394,7 +419,7 @@
                 "MemorySize": 128,
                 "Role": {
                     "Fn::GetAtt": [
-                        "LambdaRole",
+                        "AthenaLambdaRole",
                         "Arn"
                     ]
                 },
@@ -404,8 +429,9 @@
             "Type": "AWS::Lambda::Function"
         },
         "AthenaCreateTableLambda": {
+            "Condition": "AthenaCreateCondition",
             "DependsOn": [
-                "LambdaRole",
+                "AthenaLambdaRole",
                 "AthenaS3Bucket"
             ],
             "Properties": {
@@ -419,6 +445,7 @@
                                 "import boto3",
                                 "import logging",
                                 "import cfnresponse",
+                                "import re",
                                 "logger=logging.getLogger()",
                                 "logger.setLevel(logging.INFO)",
                                 "athena=boto3.client('athena')",
@@ -442,7 +469,7 @@
                                 "  props=event[CFN_RESOURCE_PROPERTIES]",
                                 "  tmp_bucket=props[\"AthenaBucket\"]",
                                 "  sync_bucket=props[\"SyncBucket\"]",
-                                "  database_name=props[\"DatabaseName\"]",
+                                "  database_name=re.sub(\"[^A-Za-z0-9]+\",\"_\",props[\"DatabaseName\"])",
                                 "  database_result='s3://{}'.format(tmp_bucket)",
                                 "  sync_result='s3://{}'.format(sync_bucket)",
                                 "  result=AthenaCloudFormationResource.__create_taxi_table('{}.taxi_tripdata'.format(database_name),sync_result,database_result)",
@@ -455,7 +482,7 @@
                                 " def delete(self,event,context):",
                                 "  props=event[CFN_RESOURCE_PROPERTIES]",
                                 "  tmp_bucket=props[\"AthenaBucket\"]",
-                                "  database_name=props[\"DatabaseName\"]",
+                                "  database_name=re.sub(\"[^A-Za-z0-9]+\",\"_\",props[\"DatabaseName\"])",
                                 "  database_result='s3://{}'.format(tmp_bucket)",
                                 "  if AthenaCloudFormationResource.__drop_table('{}.taxi_tripdata'.format(database_name),database_result):",
                                 "   cfnresponse.send(event,context,cfnresponse.SUCCESS,{})",
@@ -502,7 +529,7 @@
                 "MemorySize": 128,
                 "Role": {
                     "Fn::GetAtt": [
-                        "LambdaRole",
+                        "AthenaLambdaRole",
                         "Arn"
                     ]
                 },
@@ -511,7 +538,82 @@
             },
             "Type": "AWS::Lambda::Function"
         },
+        "AthenaLambdaRole": {
+            "Condition": "AthenaCreateCondition",
+            "DependsOn": [
+                "AthenaS3Bucket"
+            ],
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents",
+                                        "logs:CreateLogGroup"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "Version": "2012-10-17"
+                        },
+                        "PolicyName": "lambda-log-access"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "athena:*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": [
+                                        "*"
+                                    ]
+                                },
+                                {
+                                    "Action": [
+                                        "s3:*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": [
+                                        "arn:aws:s3:::*"
+                                    ]
+                                }
+                            ],
+                            "Version": "2012-10-17"
+                        },
+                        "PolicyName": "lambda-athena-access"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
         "AthenaS3Bucket": {
+            "Condition": "AthenaCreateCondition",
             "Properties": {
                 "BucketName": {
                     "Ref": "AthenaBucketName"
@@ -640,7 +742,7 @@
                         "Ref": "SubnetIdA"
                     },
                     "SubnetIdB": {
-                        "Ref": "SubnetIdA"
+                        "Ref": "SubnetIdB"
                     },
                     "SubscribeARN": {
                         "Ref": "SubscribeARN"
@@ -670,6 +772,7 @@
             "Type": "AWS::CloudFormation::Stack"
         },
         "LabAthenaDb": {
+            "Condition": "AthenaCreateCondition",
             "DependsOn": [
                 "AthenaCreateDbLambda"
             ],
@@ -693,6 +796,7 @@
             "Type": "Custom::AthenaTripDb"
         },
         "LabAthenaTable": {
+            "Condition": "AthenaCreateCondition",
             "DependsOn": [
                 "LabAthenaDb",
                 "AthenaCreateTableLambda"
@@ -716,82 +820,9 @@
             },
             "Type": "Custom::AthenaTripDb"
         },
-        "LambdaRole": {
-            "DependsOn": [
-                "AthenaS3Bucket"
-            ],
-            "Properties": {
-                "AssumeRolePolicyDocument": {
-                    "Statement": [
-                        {
-                            "Action": [
-                                "sts:AssumeRole"
-                            ],
-                            "Effect": "Allow",
-                            "Principal": {
-                                "Service": [
-                                    "lambda.amazonaws.com"
-                                ]
-                            }
-                        }
-                    ],
-                    "Version": "2012-10-17"
-                },
-                "Policies": [
-                    {
-                        "PolicyDocument": {
-                            "Statement": [
-                                {
-                                    "Action": [
-                                        "logs:CreateLogStream",
-                                        "logs:PutLogEvents",
-                                        "logs:CreateLogGroup"
-                                    ],
-                                    "Effect": "Allow",
-                                    "Resource": [
-                                        {
-                                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "Version": "2012-10-17"
-                        },
-                        "PolicyName": "lambda-log-access"
-                    },
-                    {
-                        "PolicyDocument": {
-                            "Statement": [
-                                {
-                                    "Action": [
-                                        "athena:*"
-                                    ],
-                                    "Effect": "Allow",
-                                    "Resource": [
-                                        "*"
-                                    ]
-                                },
-                                {
-                                    "Action": [
-                                        "s3:*"
-                                    ],
-                                    "Effect": "Allow",
-                                    "Resource": [
-                                        "arn:aws:s3:::*"
-                                    ]
-                                }
-                            ],
-                            "Version": "2012-10-17"
-                        },
-                        "PolicyName": "lambda-athena-access"
-                    }
-                ]
-            },
-            "Type": "AWS::IAM::Role"
-        },
         "S3DeleteLambda": {
             "DependsOn": [
-                "LambdaRole"
+                "S3LambdaRole"
             ],
             "Properties": {
                 "Code": {
@@ -843,7 +874,7 @@
                 "MemorySize": 128,
                 "Role": {
                     "Fn::GetAtt": [
-                        "LambdaRole",
+                        "S3LambdaRole",
                         "Arn"
                     ]
                 },
@@ -869,6 +900,72 @@
                 }
             },
             "Type": "Custom::S3Delete"
+        },
+        "S3LambdaRole": {
+            "DependsOn": [
+                "SyncS3Bucket"
+            ],
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents",
+                                        "logs:CreateLogGroup"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "Version": "2012-10-17"
+                        },
+                        "PolicyName": "lambda-log-access"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${S3Bucket}/*"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "Version": "2012-10-17"
+                        },
+                        "PolicyName": "lambda-s3-access"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
         },
         "SyncS3Bucket": {
             "Properties": {

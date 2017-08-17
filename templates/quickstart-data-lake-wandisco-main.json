@@ -18,5 +18,9 @@
   {
     "ParameterKey": "Password",
     "ParameterValue": "$[alfred_genuuid]"
+  },
+  {
+    "ParameterKey": "LocalFusionAccess",
+    "ParameterValue": "0.0.0.0/0"
   }
 ]

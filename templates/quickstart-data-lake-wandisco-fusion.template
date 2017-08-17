@@ -73,7 +73,7 @@
       "Default": "admin",
       "NoEcho": "true",
       "Description": "The password for the WD Fusion admin.  By default it is admin",
-      "AllowedPattern": "[0-9A-z]+",
+      "AllowedPattern": "[!@#$&*0-9A-z]+",
       "ConstraintDescription": "The password value must be alphanumeric"
     },
     "FusionVersion": {
@@ -162,11 +162,11 @@
       "Type": "AWS::EC2::VPC::Id"
     },
     "SubnetIdA": {
-      "Description": "The Id of the Subnet to use. Fusion will be launched in this subnet associated with your chosen VPC. You must ensure that the IP address range of this subnet is routable from your other Fusion servers so that they can communicate directly with an IP address in this subnet. You must also ensure that the subnet has a route table defined that allows hosts within it to communicate with all other Fusion servers. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
+      "Description": "The Id of the Subnet to use for the 1st availability zone. Fusion will be launched in this subnet associated with your chosen VPC. You must ensure that the IP address range of this subnet is routable from your other Fusion servers so that they can communicate directly with an IP address in this subnet. You must also ensure that the subnet has a route table defined that allows hosts within it to communicate with all other Fusion servers. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
       "Type": "AWS::EC2::Subnet::Id"
     },
     "SubnetIdB": {
-      "Description": "The Id of the Subnet to use. Fusion will be launched in this subnet associated with your chosen VPC. You must ensure that the IP address range of this subnet is routable from your other Fusion servers so that they can communicate directly with an IP address in this subnet. You must also ensure that the subnet has a route table defined that allows hosts within it to communicate with all other Fusion servers. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
+      "Description": "The Id of the Subnet to use for the 2nd availability zone. Fusion will be launched in this subnet associated with your chosen VPC. You must ensure that the IP address range of this subnet is routable from your other Fusion servers so that they can communicate directly with an IP address in this subnet. You must also ensure that the subnet has a route table defined that allows hosts within it to communicate with all other Fusion servers. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
       "Type": "AWS::EC2::Subnet::Id"
     },
     "SecurityGroupId": {
@@ -176,14 +176,14 @@
     "QSS3BucketName": {
       "AllowedPattern": "^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$",
       "ConstraintDescription": "must be a valid s3 bucket name",
-      "Default": "quickstart-reference",
+      "Default": "wandisco-public-files",
       "Description": "Quick Start S3 bucket name",
       "Type": "String"
     },
     "QSS3KeyPrefix": {
       "AllowedPattern": "^[0-9a-zA-Z-/]*$",
       "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
-      "Default": "wandisco/fusion/latest",
+      "Default": "",
       "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
       "Type": "String"
     }
@@ -227,64 +227,6 @@
       },
       "ap-south-1": {
         "amiID": "ami-ed82f782"
-      }
-    },
-    "GlobalCoordinates": {
-      "us-gov-west-1": {
-        "latitude": "43.6167",
-        "longitude": "-116.2000"
-      },
-      "cn-north-1": {
-        "latitude": "35.0000",
-        "longitude": "103.0000"
-      },
-      "us-east-1": {
-        "latitude": "37.5000",
-        "longitude": "-79.0000"
-      },
-      "us-west-1": {
-        "latitude": "38.2813",
-        "longitude": "-120.9045"
-      },
-      "us-west-2": {
-        "latitude": "45.5200",
-        "longitude": "-122.6819"
-      },
-      "eu-central-1": {
-        "latitude": "50.110922",
-        "longitude": "8.682127"
-      },
-      "eu-west-1": {
-        "latitude": "53.3442",
-        "longitude": "-6.2675"
-      },
-      "ap-southeast-1": {
-        "latitude": "1.3000",
-        "longitude": "103.8000"
-      },
-      "ap-southeast-2": {
-        "latitude": "-33.8650",
-        "longitude": "151.2094"
-      },
-      "ap-northeast-1": {
-        "latitude": "35.6833",
-        "longitude": "139.6833"
-      },
-      "ap-northeast-2": {
-        "latitude": "37.5667",
-        "longitude": "126.9667"
-      },
-      "sa-east-1": {
-        "latitude": "-23.5500",
-        "longitude": "-46.6333"
-      },
-      "ap-south-1": {
-        "latitude": "19.0728",
-        "longitude": "72.8826"
-      },
-      "fips-us-gov-west-1": {
-        "latitude": "39.0000",
-        "longitude": "-117.0000"
       }
     }
   },
@@ -627,28 +569,6 @@
                   ]
                 },
                 "'\n",
-                "LATITUDE='",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalCoordinates",
-                    {
-                      "Ref": "AWS::Region"
-                    },
-                    "latitude"
-                  ]
-                },
-                "'\n",
-                "LONGITUDE='",
-                {
-                  "Fn::FindInMap": [
-                    "GlobalCoordinates",
-                    {
-                      "Ref": "AWS::Region"
-                    },
-                    "longitude"
-                  ]
-                },
-                "'\n",
                 "ZONE_NAME='",
                 {
                   "Ref": "ZoneName"
@@ -725,8 +645,13 @@
                 },
                 "'\n",
                 "EOF\n",
+                { "Fn::Sub": "if [[ -z \"${QSS3KeyPrefix}\" ]]\nthen\n" },
+                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n" },
+                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n" },
+                "else\n",
                 { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n" },
                 { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n" },
+                "fi\n",
                 "chmod +x /tmp/amazonCompanionScript-2_10_3_1.sh\n",
                 "/tmp/amazonCompanionScript-2_10_3_1.sh >> /var/log/cloud-init-output.log\n",
                 "\n"
