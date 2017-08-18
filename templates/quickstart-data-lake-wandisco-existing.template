@@ -156,6 +156,26 @@
             }
         }
     },
+    "Outputs": {
+        "AthenaDatabase": {
+            "Condition": "AthenaCreateCondition",
+            "Description": "Sample Athena Database",
+            "Value": {
+                "Fn::Sub": "wandisco_fusion_db_lab_${AWS::StackName}"
+            }
+        },
+        "AthenaTable": {
+            "Condition": "AthenaCreateCondition",
+            "Description": "Sample table for demo Taxi data",
+            "Value": "taxi_tripdata"
+        },
+        "SecurityGroupID": {
+            "Description": "SecurityGroup ID used on WANdisco Fusion instance",
+            "Value": {
+                "Ref": "FusionSecurityGroup"
+            }
+        }
+    },
     "Parameters": {
         "AthenaBucketName": {
             "Description": "Athena Output Bucket",
@@ -954,7 +974,8 @@
                             "Statement": [
                                 {
                                     "Action": [
-                                        "s3:*"
+                                        "s3:DeleteObject",
+                                        "s3:ListBucket"
                                     ],
                                     "Effect": "Allow",
                                     "Resource": [

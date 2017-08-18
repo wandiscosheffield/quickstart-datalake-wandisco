@@ -150,6 +150,35 @@
             }
         }
     },
+    "Outputs": {
+        "PublicSubnet1": {
+            "Description": "Subnet ID of 1st public subnet",
+            "Value": {
+                "Fn::GetAtt": [
+                    "VPCStack",
+                    "Outputs.PublicSubnet1ID"
+                ]
+            }
+        },
+        "PublicSubnet2": {
+            "Description": "Subnet ID of 2nd public subnet",
+            "Value": {
+                "Fn::GetAtt": [
+                    "VPCStack",
+                    "Outputs.PublicSubnet2ID"
+                ]
+            }
+        },
+        "VPCID": {
+            "Description": "VPC ID of the newly created VPC",
+            "Value": {
+                "Fn::GetAtt": [
+                    "VPCStack",
+                    "Outputs.VPCID"
+                ]
+            }
+        }
+    },
     "Parameters": {
         "AthenaBucketName": {
             "Description": "Athena Output Bucket",

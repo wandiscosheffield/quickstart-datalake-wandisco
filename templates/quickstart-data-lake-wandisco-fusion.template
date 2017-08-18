@@ -440,6 +440,137 @@
     },
     "ClusterNodeLaunchConfig": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "files": {
+              "/tmp/amazonProperties.properties": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "AWS_STACKNAME='",
+                      {
+                        "Ref": "AWS::StackName"
+                      },
+                      "'\n",
+                      "AWS_STACKID='",
+                      {
+                        "Ref": "AWS::StackId"
+                      },
+                      "'\n",
+                      "AWS_REGION='",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "'\n",
+                      "AWS_CLUSTER_NAME='",
+                      {
+                        "Ref": "ClusterName"
+                      },
+                      "'\n",
+                      "FUSION_VERSION='",
+                      {
+                        "Ref": "FusionVersion"
+                      },
+                      "'\n",
+                      "FUSION_INSTALLER='",
+                      {
+                        "Fn::FindInMap": [
+                          "FusionVersionInstaller",
+                          {
+                            "Ref": "FusionVersion"
+                          },
+                          "FileURI"
+                        ]
+                      },
+                      "'\n",
+                      "ZONE_NAME='",
+                      {
+                        "Ref": "ZoneName"
+                      },
+                      "'\n",
+                      "USERNAME='",
+                      {
+                        "Ref": "UserName"
+                      },
+                      "'\n",
+                      "PASSWORD='",
+                      {
+                        "Ref": "Password"
+                      },
+                      "'\n",
+                      "BUCKET_NAME='",
+                      {
+                        "Ref": "S3Bucket"
+                      },
+                      "'\n",
+                      "INDUCTOR_IP='",
+                      {
+                        "Ref": "InductorNodeIP"
+                      },
+                      "'\n",
+                      "SERVER_ENCRYPTION='",
+                      {
+                        "Ref": "S3ServerEncryption"
+                      },
+                      "'\n",
+                      "SERVER_ENCRYPTION_ALGORITHM='",
+                      {
+                        "Ref": "EncryptionAlgorithm"
+                      },
+                      "'\n",
+                      "KMS_KEY='",
+                      {
+                        "Ref": "KMSKey"
+                      },
+                      "'\n",
+                      "BACKEND_VERSION='emr-",
+                      {
+                        "Ref": "EMRVersion"
+                      },
+                      "'\n",
+                      "LICENSE_URL='",
+                      {
+                        "Ref": "FusionLicense"
+                      },
+                      "'\n",
+                      "CLUSTER_COMPLETE_HANDLE='",
+                      {
+                        "Ref": "ClusterCompleteHandle"
+                      },
+                      "'\n",
+                      "FUSION_INSTALLED_HANDLER='",
+                      {
+                        "Ref": "FusionInstalledHandler"
+                      },
+                      "'\n",
+                      "CLUSTER_INSTANCE_COUNT='",
+                      {
+                        "Ref": "ClusterInstanceCount"
+                      },
+                      "'\n",
+                      "SECURITY_GROUP_ID='",
+                      {
+                        "Ref": "SecurityGroupId"
+                      },
+                      "'\n",
+                      "SUBSCRIBE_EMAIL_ARN='",
+                      {
+                        "Ref": "SubscribeARN"
+                      },
+                      "'\n"
+                    ]
+                  ]
+                },
+                "mode": "000600",
+                "owner": "root",
+                "group": "root"
+              }
+            }
+          }
+        }
+      },
       "Properties": {
         "BlockDeviceMappings": {
           "Fn::If": [
@@ -532,125 +663,23 @@
               "",
               [
                 "#!/bin/bash\n",
-                "cat << EOF > /tmp/amazonProperties.properties\n",
-                "AWS_STACKNAME='",
+                "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r ClusterNodeLaunchConfig --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
                 {
-                  "Ref": "AWS::StackName"
+                  "Fn::Sub": "if [[ -z \"${QSS3KeyPrefix}\" ]]\nthen\n"
                 },
-                "'\n",
-                "AWS_STACKID='",
                 {
-                  "Ref": "AWS::StackId"
+                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n"
                 },
-                "'\n",
-                "AWS_REGION='",
                 {
-                  "Ref": "AWS::Region"
+                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n"
                 },
-                "'\n",
-                "AWS_CLUSTER_NAME='",
-                {
-                  "Ref": "ClusterName"
-                },
-                "'\n",
-                "FUSION_VERSION='",
-                {
-                  "Ref": "FusionVersion"
-                },
-                "'\n",
-                "FUSION_INSTALLER='",
-                {
-                  "Fn::FindInMap": [
-                    "FusionVersionInstaller",
-                    {
-                      "Ref": "FusionVersion"
-                    },
-                    "FileURI"
-                  ]
-                },
-                "'\n",
-                "ZONE_NAME='",
-                {
-                  "Ref": "ZoneName"
-                },
-                "'\n",
-                "USERNAME='",
-                {
-                  "Ref": "UserName"
-                },
-                "'\n",
-                "PASSWORD='",
-                {
-                  "Ref": "Password"
-                },
-                "'\n",
-                "BUCKET_NAME='",
-                {
-                  "Ref": "S3Bucket"
-                },
-                "'\n",
-                "INDUCTOR_IP='",
-                {
-                  "Ref": "InductorNodeIP"
-                },
-                "'\n",
-                "SERVER_ENCRYPTION='",
-                {
-                  "Ref": "S3ServerEncryption"
-                },
-                "'\n",
-                "SERVER_ENCRYPTION_ALGORITHM='",
-                {
-                  "Ref": "EncryptionAlgorithm"
-                },
-                "'\n",
-                "KMS_KEY='",
-                {
-                  "Ref": "KMSKey"
-                },
-                "'\n",
-                "BACKEND_VERSION='emr-",
-                {
-                  "Ref": "EMRVersion"
-                },
-                "'\n",
-                "LICENSE_URL='",
-                {
-                  "Ref": "FusionLicense"
-                },
-                "'\n",
-                "CLUSTER_COMPLETE_HANDLE='",
-                {
-                  "Ref": "ClusterCompleteHandle"
-                },
-                "'\n",
-                "FUSION_INSTALLED_HANDLER='",
-                {
-                  "Ref": "FusionInstalledHandler"
-                },
-                "'\n",
-                "CLUSTER_INSTANCE_COUNT='",
-                {
-                  "Ref": "ClusterInstanceCount"
-                },
-                "'\n",
-                "SECURITY_GROUP_ID='",
-                {
-                  "Ref": "SecurityGroupId"
-                },
-                "'\n",
-                "SUBSCRIBE_EMAIL_ARN='",
-                {
-                  "Ref": "SubscribeARN"
-                },
-                "'\n",
-                "EOF\n",
-                { "Fn::Sub": "if [[ -z \"${QSS3KeyPrefix}\" ]]\nthen\n" },
-                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n" },
-                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n" },
                 "else\n",
-                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n" },
-                { "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n" },
+                {
+                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n"
+                },
+                {
+                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n"
+                },
                 "fi\n",
                 "chmod +x /tmp/amazonCompanionScript-2_10_3_1.sh\n",
                 "/tmp/amazonCompanionScript-2_10_3_1.sh >> /var/log/cloud-init-output.log\n",
@@ -814,211 +843,6 @@
         "QSS3KeyPrefix": {
           "default": "AWS Quick Start Version"
         }
-      }
-    },
-    "AWS::CloudFormation::Designer": {
-      "490086bf-38f9-4006-ab66-c855e0cc3dc1": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 420,
-          "y": 660
-        },
-        "z": 1,
-        "embeds": []
-      },
-      "060b2096-3e36-4b20-9aeb-ca6bf2d0d1ba": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 540,
-          "y": 660
-        },
-        "z": 1,
-        "embeds": []
-      },
-      "8c1680e3-7041-409b-a911-a963ccfc0ac9": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 660,
-          "y": 660
-        },
-        "z": 1,
-        "embeds": [],
-        "isassociatedwith": [
-          "060b2096-3e36-4b20-9aeb-ca6bf2d0d1ba"
-        ]
-      },
-      "53a9df5e-ea00-46c1-a755-ab74eb4ea2e8": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 720,
-          "y": 90
-        },
-        "z": 1,
-        "embeds": []
-      },
-      "5f40bf7e-0e2e-4991-aaaf-d2890e10e552": {
-        "size": {
-          "width": 600,
-          "height": 510
-        },
-        "position": {
-          "x": 60,
-          "y": 90
-        },
-        "z": 1,
-        "embeds": [
-          "8a4c2d69-4cab-4c25-9939-591becd10034",
-          "a6d0f93f-d74d-4130-a1d4-55be865bb69a",
-          "30a97ff0-2072-42b3-a5bb-6dc0cdd2b59f"
-        ]
-      },
-      "8a4c2d69-4cab-4c25-9939-591becd10034": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 390,
-          "y": 360
-        },
-        "z": 2,
-        "parent": "5f40bf7e-0e2e-4991-aaaf-d2890e10e552",
-        "embeds": []
-      },
-      "ee596ab8-5221-42b3-bc52-0f902574e4f9": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 720,
-          "y": 210
-        },
-        "z": 1,
-        "embeds": [],
-        "ismemberof": [
-          "8a4c2d69-4cab-4c25-9939-591becd10034"
-        ],
-        "isrelatedto": [
-          "8c1680e3-7041-409b-a911-a963ccfc0ac9",
-          "490086bf-38f9-4006-ab66-c855e0cc3dc1",
-          "d8e357ab-c11e-4aa9-b126-cf11ff9fe7fd",
-          "21657f64-77eb-4495-a805-5dc9c0ca2b49",
-          "f3d02577-5287-4adb-a34b-bff04192bbe0"
-        ]
-      },
-      "a6d0f93f-d74d-4130-a1d4-55be865bb69a": {
-        "size": {
-          "width": 240,
-          "height": 240
-        },
-        "position": {
-          "x": 90,
-          "y": 150
-        },
-        "z": 2,
-        "parent": "5f40bf7e-0e2e-4991-aaaf-d2890e10e552",
-        "embeds": [
-          "53984dd9-2b21-4a81-bf2c-9a41f4c7da0c"
-        ]
-      },
-      "30a97ff0-2072-42b3-a5bb-6dc0cdd2b59f": {
-        "size": {
-          "width": 150,
-          "height": 150
-        },
-        "position": {
-          "x": 390,
-          "y": 150
-        },
-        "z": 2,
-        "parent": "5f40bf7e-0e2e-4991-aaaf-d2890e10e552",
-        "embeds": []
-      },
-      "6b87a88f-1f4c-429f-bb28-2731609d886b": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 720,
-          "y": 330
-        },
-        "z": 1,
-        "embeds": [],
-        "isconnectedto": [
-          "30a97ff0-2072-42b3-a5bb-6dc0cdd2b59f"
-        ],
-        "isassociatedwith": [
-          "ee596ab8-5221-42b3-bc52-0f902574e4f9"
-        ]
-      },
-      "b0632cb1-76d7-4bd0-a473-9b06f3ad5986": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 840,
-          "y": 330
-        },
-        "z": 1,
-        "embeds": [],
-        "references": [
-          "490086bf-38f9-4006-ab66-c855e0cc3dc1"
-        ],
-        "dependson": [
-          "6b87a88f-1f4c-429f-bb28-2731609d886b"
-        ]
-      },
-      "f9f1252e-d042-436c-96d4-2b08b47dc748": {
-        "source": {
-          "id": "a6d0f93f-d74d-4130-a1d4-55be865bb69a"
-        },
-        "target": {
-          "id": "30a97ff0-2072-42b3-a5bb-6dc0cdd2b59f"
-        },
-        "z": 2
-      },
-      "7b651b93-7d20-4abc-8513-ffed6fdbe1eb": {
-        "source": {
-          "id": "53a9df5e-ea00-46c1-a755-ab74eb4ea2e8"
-        },
-        "target": {
-          "id": "5f40bf7e-0e2e-4991-aaaf-d2890e10e552"
-        },
-        "z": 1
-      },
-      "53984dd9-2b21-4a81-bf2c-9a41f4c7da0c": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": 120,
-          "y": 210
-        },
-        "z": 3,
-        "parent": "a6d0f93f-d74d-4130-a1d4-55be865bb69a",
-        "embeds": [],
-        "references": [
-          "53a9df5e-ea00-46c1-a755-ab74eb4ea2e8"
-        ],
-        "dependson": [
-          "7b651b93-7d20-4abc-8513-ffed6fdbe1eb"
-        ]
       }
     }
   }
