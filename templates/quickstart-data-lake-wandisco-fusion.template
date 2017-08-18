@@ -122,15 +122,6 @@
       ],
       "ConstraintDescription": "Must respond \"Yes\" or \"No\""
     },
-    "EncryptionAlgorithm": {
-      "Type": "String",
-      "Default": "AES256",
-      "Description": "Algorithm to use for server-side encryption on S3 (default AES256)",
-      "AllowedValues": [
-        "AES256"
-      ],
-      "ConstraintDescription": "Must specify an algorithm"
-    },
     "KMSKey": {
       "Type": "String",
       "Default": "",
@@ -515,11 +506,7 @@
                         "Ref": "S3ServerEncryption"
                       },
                       "'\n",
-                      "SERVER_ENCRYPTION_ALGORITHM='",
-                      {
-                        "Ref": "EncryptionAlgorithm"
-                      },
-                      "'\n",
+                      "SERVER_ENCRYPTION_ALGORITHM='AES256'\n",
                       "KMS_KEY='",
                       {
                         "Ref": "KMSKey"
@@ -754,8 +741,7 @@
           },
           "Parameters": [
             "KMSKey",
-            "S3ServerEncryption",
-            "EncryptionAlgorithm"
+            "S3ServerEncryption"
           ]
         },
         {
@@ -833,9 +819,6 @@
         },
         "S3ServerEncryption": {
           "default": "Enable S3 Server-side Encryption"
-        },
-        "EncryptionAlgorithm": {
-          "default": "S3 Server-side Encryption Algorithm"
         },
         "QSS3BucketName": {
           "default": "AWS Quick Start Bucket Name"
