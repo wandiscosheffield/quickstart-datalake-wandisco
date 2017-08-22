@@ -164,6 +164,10 @@
       "Description": "The Id of the Security Group to use. This Security Group will be used by the EC2 instance in which Fusion runs. You must ensure that it allows inbound and outbound communication on all the ports required for Fusion's operation. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
       "Type": "AWS::EC2::SecurityGroup::Id"
     },
+    "AdminSecurityGroupId": {
+      "Description": "The Id of the Security Group to use for administration access. This Security Group will be used by the EC2 instance in which Fusion runs.",
+      "Type": "AWS::EC2::SecurityGroup::Id"
+    },
     "QSS3BucketName": {
       "AllowedPattern": "^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$",
       "ConstraintDescription": "must be a valid s3 bucket name",
@@ -174,7 +178,7 @@
     "QSS3KeyPrefix": {
       "AllowedPattern": "^[0-9a-zA-Z-/]*$",
       "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
-      "Default": "",
+      "Default": "/",
       "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
       "Type": "String"
     }
@@ -632,6 +636,9 @@
         "SecurityGroups": [
           {
             "Ref": "SecurityGroupId"
+          },
+          {
+            "Ref": "AdminSecurityGroupId"
           }
         ],
         "InstanceType": {
@@ -652,22 +659,11 @@
                 "#!/bin/bash\n",
                 "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r ClusterNodeLaunchConfig --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
                 {
-                  "Fn::Sub": "if [[ -z \"${QSS3KeyPrefix}\" ]]\nthen\n"
+                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n"
                 },
                 {
-                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n"
+                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n"
                 },
-                {
-                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n"
-                },
-                "else\n",
-                {
-                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n"
-                },
-                {
-                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}/scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n"
-                },
-                "fi\n",
                 "chmod +x /tmp/amazonCompanionScript-2_10_3_1.sh\n",
                 "/tmp/amazonCompanionScript-2_10_3_1.sh >> /var/log/cloud-init-output.log\n",
                 "\n"
@@ -711,6 +707,7 @@
             "ClusterNodeType",
             "VpcId",
             "SecurityGroupId",
+            "AdminSecurityGroupId",
             "SubnetIdA",
             "SubnetIdB",
             "S3Bucket",
@@ -768,6 +765,9 @@
         },
         "SecurityGroupId": {
           "default": "Security Group ID"
+        },
+        "AdminSecurityGroupId": {
+          "default": "Admin Access Security Group ID"
         },
         "SubnetIdA": {
           "default": "VPC Subnet ID for Zone 1"
