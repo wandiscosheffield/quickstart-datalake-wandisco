@@ -139,14 +139,7 @@
     "ClusterInstanceCount": {
       "Description": "Size of Fusion Server cluster",
       "Type": "Number",
-      "Default": "1",
-      "AllowedValues": [
-        "1",
-        "2",
-        "3",
-        "4",
-        "5"
-      ]
+      "Default": "1"
     },
     "VpcId": {
       "Description": "The Id of the VPC to use. Your Fusion instance will be launched in this Virtual Private Cloud. You need to select an existing VPC, and you must ensure that you have configured that VPC previously in a way that allows bi-directional network connectivity with all your other Fusion servers. The VPC must have an appropriate IP address range, associated subnet, route table, network gateway, and security settings. Please refer to the quickstart guide for details: http://docs.wandisco.com/bigdata/wdfusion/quickstart_alt.html#cf",
@@ -265,13 +258,6 @@
           {
             "PolicyDocument": {
               "Statement": [
-                {
-                  "Resource": "arn:aws:dynamodb:*:*:table/EmrFSMetadata",
-                  "Action": [
-                    "dynamodb:*"
-                  ],
-                  "Effect": "Allow"
-                },
                 {
                   "Action": [
                     "autoscaling:DetachInstances",
@@ -557,6 +543,24 @@
                 "mode": "000600",
                 "owner": "root",
                 "group": "root"
+              },
+              "/tmp/common-2_10_3_1.sh": {
+                "source" : { "Fn::Sub": "https://s3.amazonaws.com/${QSS3BucketName}/${QSS3KeyPrefix}scripts/common-2_10_3_1.sh" },
+                "mode": "000700",
+                "owner": "root",
+                "group": "root"
+              },
+              "/tmp/amazonCompanionScript-2_10_3_1.sh": {
+                "source" : { "Fn::Sub": "https://s3.amazonaws.com/${QSS3BucketName}/${QSS3KeyPrefix}scripts/amazonCompanionScript-2_10_3_1.sh" },
+                "mode": "000700",
+                "owner": "root",
+                "group": "root"
+              }
+            },
+            "commands": {
+              "setup": {
+                "command" : "/tmp/amazonCompanionScript-2_10_3_1.sh >> /var/log/cloud-init-output.log",
+                "cwd" : "/tmp"
               }
             }
           }
@@ -657,16 +661,7 @@
               "",
               [
                 "#!/bin/bash\n",
-                "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r ClusterNodeLaunchConfig --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
-                {
-                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}scripts/common-2_10_3_1.sh /tmp/common-2_10_3_1.sh\n"
-                },
-                {
-                  "Fn::Sub": "aws s3 cp s3://${QSS3BucketName}/${QSS3KeyPrefix}scripts/amazonCompanionScript-2_10_3_1.sh /tmp/amazonCompanionScript-2_10_3_1.sh\n"
-                },
-                "chmod +x /tmp/amazonCompanionScript-2_10_3_1.sh\n",
-                "/tmp/amazonCompanionScript-2_10_3_1.sh >> /var/log/cloud-init-output.log\n",
-                "\n"
+                "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r ClusterNodeLaunchConfig --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n"
               ]
             ]
           }

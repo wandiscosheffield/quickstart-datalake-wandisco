@@ -1,5 +1,38 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
+    "Conditions": {
+        "AthenaBucketExistingCondition": {
+            "Fn::And": [
+                {
+                    "Condition": "AthenaCreateCondition"
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "AthenaBucketExisting"
+                        },
+                        "false"
+                    ]
+                }
+            ]
+        },
+        "AthenaCreateCondition": {
+            "Fn::Equals": [
+                {
+                    "Ref": "AthenaCreateTable"
+                },
+                "true"
+            ]
+        },
+        "S3BucketExistingCondition": {
+            "Fn::Equals": [
+                {
+                    "Ref": "S3BucketExisting"
+                },
+                "false"
+            ]
+        }
+    },
     "Description": "WANdisco Fusion Getting Started full stack template: This template will deploy WANdisco Fusion into its own VPC.",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
@@ -41,6 +74,7 @@
                         "default": "WD Fusion Data Storage Configuration"
                     },
                     "Parameters": [
+                        "S3BucketExisting",
                         "S3Bucket",
                         "KMSKey",
                         "S3ServerEncryption"
@@ -65,7 +99,8 @@
                     },
                     "Parameters": [
                         "AthenaCreateTable",
-                        "AthenaBucketName"
+                        "AthenaBucketExisting",
+                        "AthenaBucket"
                     ]
                 },
                 {
@@ -82,8 +117,11 @@
                 "AdminFusionAccess": {
                     "default": "Administration Access CIDR"
                 },
-                "AthenaBucketName": {
+                "AthenaBucket": {
                     "default": "Athena Output Bucket"
+                },
+                "AthenaBucketExisting": {
+                    "default": "Athena Output to Existing Bucket"
                 },
                 "AthenaCreateTable": {
                     "default": "Create Athena Table"
@@ -133,6 +171,9 @@
                 "S3Bucket": {
                     "default": "S3 Bucket"
                 },
+                "S3BucketExisting": {
+                    "default": "Replicate to Existing Bucket"
+                },
                 "S3ServerEncryption": {
                     "default": "S3 Server-side Encryption Algorithm"
                 },
@@ -155,6 +196,65 @@
         }
     },
     "Outputs": {
+        "AdminSecurityGroupID": {
+            "Description": "SecurityGroup ID used on WANdisco Fusion for administrator access",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.AdminSecurityGroupID"
+                ]
+            }
+        },
+        "AthenaBucketResourceArn": {
+            "Condition": "AthenaBucketExistingCondition",
+            "Description": "Athena bucket Amazon Resource Name (ARN) of the specified bucket",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.AthenaBucketResourceArn"
+                ]
+            }
+        },
+        "AthenaBucketResourceBucket": {
+            "Condition": "AthenaBucketExistingCondition",
+            "Description": "Athena bucket name",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.AthenaBucketResourceBucket"
+                ]
+            }
+        },
+        "AthenaBucketResourceDomainName": {
+            "Condition": "AthenaBucketExistingCondition",
+            "Description": "Athena IPv4 DNS name of the specified bucket",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.AthenaBucketResourceDomainName"
+                ]
+            }
+        },
+        "AthenaDatabase": {
+            "Condition": "AthenaCreateCondition",
+            "Description": "Sample Athena Database",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.AthenaDatabase"
+                ]
+            }
+        },
+        "AthenaTable": {
+            "Condition": "AthenaCreateCondition",
+            "Description": "Sample table for demo Taxi data",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.AthenaTable"
+                ]
+            }
+        },
         "PublicSubnet1": {
             "Description": "Subnet ID of 1st public subnet",
             "Value": {
@@ -170,6 +270,45 @@
                 "Fn::GetAtt": [
                     "VPCStack",
                     "Outputs.PublicSubnet2ID"
+                ]
+            }
+        },
+        "S3BucketResourceArn": {
+            "Condition": "S3BucketExistingCondition",
+            "Description": "Amazon Resource Name (ARN) of the specified bucket",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.S3BucketResourceArn"
+                ]
+            }
+        },
+        "S3BucketResourceBucket": {
+            "Condition": "S3BucketExistingCondition",
+            "Description": "Fusion replication bucket name",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.S3BucketResourceBucket"
+                ]
+            }
+        },
+        "S3BucketResourceDomainName": {
+            "Condition": "S3BucketExistingCondition",
+            "Description": "Fusion replication IPv4 DNS name of the specified bucket",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.S3BucketResourceDomainName"
+                ]
+            }
+        },
+        "SecurityGroupID": {
+            "Description": "SecurityGroup ID used on WANdisco Fusion instance",
+            "Value": {
+                "Fn::GetAtt": [
+                    "FusionStack",
+                    "Outputs.SecurityGroupID"
                 ]
             }
         },
@@ -190,8 +329,17 @@
             "Description": "CIDR block for administration access",
             "Type": "String"
         },
-        "AthenaBucketName": {
+        "AthenaBucket": {
             "Description": "Athena Output Bucket",
+            "Type": "String"
+        },
+        "AthenaBucketExisting": {
+            "AllowedValues": [
+                "true",
+                "false"
+            ],
+            "Default": "false",
+            "Description": "Specify if athena output bucket is an existing S3 bucket. If set to false the template will use an existing bucket (specified below).",
             "Type": "String"
         },
         "AthenaCreateTable": {
@@ -327,6 +475,15 @@
             "Description": "The name of S3 bucket to replicate local Hadoop HDFS drive data.",
             "Type": "String"
         },
+        "S3BucketExisting": {
+            "AllowedValues": [
+                "true",
+                "false"
+            ],
+            "Default": "false",
+            "Description": "Specify if destination bucket is an existing S3 bucket. If set to false the template will use an existing bucket (specified below).",
+            "Type": "String"
+        },
         "S3ServerEncryption": {
             "AllowedValues": [
                 "Yes",
@@ -377,8 +534,11 @@
                     "AdminFusionAccess": {
                         "Ref": "AdminFusionAccess"
                     },
-                    "AthenaBucketName": {
-                        "Ref": "AthenaBucketName"
+                    "AthenaBucket": {
+                        "Ref": "AthenaBucket"
+                    },
+                    "AthenaBucketExisting": {
+                        "Ref": "AthenaBucketExisting"
                     },
                     "AthenaCreateTable": {
                         "Ref": "AthenaCreateTable"
@@ -421,6 +581,9 @@
                     },
                     "S3Bucket": {
                         "Ref": "S3Bucket"
+                    },
+                    "S3BucketExisting": {
+                        "Ref": "S3BucketExisting"
                     },
                     "S3ServerEncryption": {
                         "Ref": "S3ServerEncryption"

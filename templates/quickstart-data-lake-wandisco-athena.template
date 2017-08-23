@@ -9,13 +9,13 @@
                         "default": "Athena Configuration"
                     },
                     "Parameters": [
-                        "AthenaBucketName",
+                        "AthenaBucket",
                         "S3Bucket"
                     ]
                 }
             ],
             "ParameterLabels": {
-                "AthenaBucketName": {
+                "AthenaBucket": {
                     "default": "Athena Output Bucket"
                 },
                 "S3Bucket": {
@@ -37,22 +37,21 @@
         }
     },
     "Parameters": {
-        "AthenaBucketName": {
+        "AthenaBucket": {
             "Description": "Athena Output Bucket",
             "Type": "String"
         },
         "S3Bucket": {
             "AllowedPattern": "^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$",
             "ConstraintDescription": "Must provide valid S3 Bucket name",
-            "Description": "The name of S3 bucket local Hadoop HDFS drive data has been replicated too.",
+            "Description": "The name of S3 bucket to replicate local Hadoop HDFS drive data.",
             "Type": "String"
         }
     },
     "Resources": {
         "AthenaCreateDbLambda": {
             "DependsOn": [
-                "AthenaLambdaRole",
-                "AthenaS3Bucket"
+                "AthenaLambdaRole"
             ],
             "Properties": {
                 "Code": {
@@ -156,8 +155,7 @@
         },
         "AthenaCreateTableLambda": {
             "DependsOn": [
-                "AthenaLambdaRole",
-                "AthenaS3Bucket"
+                "AthenaLambdaRole"
             ],
             "Properties": {
                 "Code": {
@@ -264,9 +262,6 @@
             "Type": "AWS::Lambda::Function"
         },
         "AthenaLambdaRole": {
-            "DependsOn": [
-                "AthenaS3Bucket"
-            ],
             "Properties": {
                 "AssumeRolePolicyDocument": {
                     "Statement": [
@@ -326,10 +321,10 @@
                                     "Effect": "Allow",
                                     "Resource": [
                                         {
-                                            "Fn::Sub": "arn:aws:s3:::${AthenaBucketName}"
+                                            "Fn::Sub": "arn:aws:s3:::${AthenaBucket}"
                                         },
                                         {
-                                            "Fn::Sub": "arn:aws:s3:::${AthenaBucketName}/*"
+                                            "Fn::Sub": "arn:aws:s3:::${AthenaBucket}/*"
                                         }
                                     ]
                                 }
@@ -342,21 +337,13 @@
             },
             "Type": "AWS::IAM::Role"
         },
-        "AthenaS3Bucket": {
-            "Properties": {
-                "BucketName": {
-                    "Ref": "AthenaBucketName"
-                }
-            },
-            "Type": "AWS::S3::Bucket"
-        },
         "LabAthenaDb": {
             "DependsOn": [
                 "AthenaCreateDbLambda"
             ],
             "Properties": {
                 "AthenaBucket": {
-                    "Ref": "AthenaBucketName"
+                    "Ref": "AthenaBucket"
                 },
                 "DatabaseName": {
                     "Fn::Sub": "wandisco_fusion_db_lab_${AWS::StackName}"
@@ -380,7 +367,7 @@
             ],
             "Properties": {
                 "AthenaBucket": {
-                    "Ref": "AthenaBucketName"
+                    "Ref": "AthenaBucket"
                 },
                 "DatabaseName": {
                     "Fn::Sub": "wandisco_fusion_db_lab_${AWS::StackName}"
