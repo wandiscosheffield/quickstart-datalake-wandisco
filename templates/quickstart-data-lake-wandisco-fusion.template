@@ -344,7 +344,10 @@
                     "s3:GetObject"
                   ],
                   "Effect": "Allow",
-                  "Resource": "arn:aws:s3:::wandisco-public-files/*"
+                  "Resource": [
+                    "arn:aws:s3:::wandisco-public-files/*",
+                    { "Fn::Sub": "arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*" }
+                  ]
                 }
               ]
             },
@@ -425,6 +428,19 @@
     "ClusterNodeLaunchConfig": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Metadata": {
+        "AWS::CloudFormation::Authentication": {
+          "S3AccessCreds": {
+            "type": "S3",
+            "roleName": {
+              "Ref": "InstanceIAMRole"
+            },
+            "buckets": [
+              {
+                "Ref": "QSS3BucketName"
+              }
+            ]
+          }
+        },
         "AWS::CloudFormation::Init": {
           "config": {
             "files": {
@@ -551,13 +567,15 @@
                 "source" : { "Fn::Sub": "https://s3.amazonaws.com/${QSS3BucketName}/${QSS3KeyPrefix}scripts/common-2_10_3_1.sh" },
                 "mode": "000700",
                 "owner": "root",
-                "group": "root"
+                "group": "root",
+                "authentication": "S3AccessCreds"
               },
               "/tmp/amazonCompanionScript-2_10_3_1.sh": {
                 "source" : { "Fn::Sub": "https://s3.amazonaws.com/${QSS3BucketName}/${QSS3KeyPrefix}scripts/amazonCompanionScript-2_10_3_1.sh" },
                 "mode": "000700",
                 "owner": "root",
-                "group": "root"
+                "group": "root",
+                "authentication": "S3AccessCreds"
               }
             },
             "commands": {
