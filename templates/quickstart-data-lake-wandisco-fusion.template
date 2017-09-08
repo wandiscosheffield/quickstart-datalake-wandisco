@@ -186,6 +186,9 @@
       "us-east-1": {
         "amiID": "ami-25b0c632"
       },
+      "us-east-2": {
+        "amiID": "ami-47b5ee22"
+      },
       "us-west-1": {
         "amiID": "ami-50b0fc30"
       },
@@ -212,9 +215,6 @@
       },
       "sa-east-1": {
         "amiID": "ami-b0ae3edc"
-      },
-      "us-east-2": {
-        "amiID": "ami-47b5ee22"
       },
       "ap-south-1": {
         "amiID": "ami-ed82f782"
