@@ -1,7 +1,7 @@
 global:
   marketplace-ami: true
   owner: quickstart-eng@amazon.com
-  qsname: quickstart-data-lake-wandisco
+  qsname: quickstart-datalake-wandisco
   regions:
     - ap-northeast-1
     - ap-northeast-2
@@ -22,3 +22,5 @@ tests:
   quickstart-data-lake-wandiscot1:
     parameter_input: quickstart-data-lake-wandisco-main.json
     template_file: quickstart-data-lake-wandisco-main.template
+    regions:
+      - us-west-2

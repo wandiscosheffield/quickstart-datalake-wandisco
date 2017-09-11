@@ -1,26 +1,34 @@
 [
   {
+    "ParameterKey": "AdminFusionAccess",
+    "ParameterValue": "10.0.0.0/0"
+  },
+  {
+    "ParameterKey": "AthenaBucket",
+    "ParameterValue": "athena-bucket"
+  },
+  {
     "ParameterKey": "KeyName",
     "ParameterValue": "cikey"
   },
   {
-    "ParameterKey": "AvailabilityZones",
-    "ParameterValue": "$[alfred_getaz_2]"
+    "ParameterKey": "LocalFusionAccess",
+    "ParameterValue": "10.0.0.0/0"
+  },
+  {
+    "ParameterKey": "Password",
+    "ParameterValue": "$[alfred_genpass_16]"
   },
   {
     "ParameterKey": "S3Bucket",
-    "ParameterValue": "$[alfred_genuuid]"
+    "ParameterValue": "replication-bucket"
+  },
+  {
+    "ParameterKey": "AvailabilityZones",
+    "ParameterValue": "$[alfred_genaz_2]"
   },
   {
     "ParameterKey": "AthenaBucketName",
     "ParameterValue": "$[alfred_genuuid]"
-  },
-  {
-    "ParameterKey": "Password",
-    "ParameterValue": "$[alfred_genuuid]"
-  },
-  {
-    "ParameterKey": "LocalFusionAccess",
-    "ParameterValue": "0.0.0.0/0"
   }
 ]
