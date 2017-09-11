@@ -1,5 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "This template will deploy Hybrid Datalake solution using WANdisco Fusion and other AWS Services into a new VPC. **WARNING** You will be billed for the AWS resources used if you create a stack from this template.",
     "Conditions": {
         "AthenaBucketExistingCondition": {
             "Fn::And": [
@@ -33,45 +34,37 @@
             ]
         }
     },
-    "Description": "WANdisco Fusion Getting Started full stack template: This template will deploy WANdisco Fusion into its own VPC.",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
                 {
                     "Label": {
-                        "default": "General Parameters"
+                        "default": "Network Configuration"
                     },
                     "Parameters": [
-                        "KeyName"
+                        "AvailabilityZones",
+                        "VPCCIDR",
+                        "PublicSubnet1CIDR",
+                        "PublicSubnet2CIDR"
                     ]
                 },
                 {
                     "Label": {
-                        "default": "Network Configuration"
+                        "default": "WANdisco Fusion Cluster Configuration"
                     },
                     "Parameters": [
-                        "VPCAvailabilityZones",
-                        "VPCCIDR",
-                        "PublicSubnet1CIDR",
-                        "PublicSubnet2CIDR",
+                        "ClusterName",
+                        "ClusterNodeType",
+                        "PersistentStorage",
+                        "ClusterInstanceCount",
+                        "KeyName",
                         "LocalFusionAccess",
                         "AdminFusionAccess"
                     ]
                 },
                 {
                     "Label": {
-                        "default": "WD Fusion Cluster Configuration"
-                    },
-                    "Parameters": [
-                        "ClusterName",
-                        "ClusterNodeType",
-                        "PersistentStorage",
-                        "ClusterInstanceCount"
-                    ]
-                },
-                {
-                    "Label": {
-                        "default": "WD Fusion Data Storage Configuration"
+                        "default": "WANdisco Fusion Data Storage Configuration"
                     },
                     "Parameters": [
                         "S3BucketExisting",
@@ -82,7 +75,7 @@
                 },
                 {
                     "Label": {
-                        "default": "WD Fusion Application Configuration"
+                        "default": "WANdisco Fusion Application Configuration"
                     },
                     "Parameters": [
                         "ZoneName",
@@ -169,7 +162,7 @@
                     "default": "AWS Quick Start Version"
                 },
                 "S3Bucket": {
-                    "default": "S3 Bucket"
+                    "default": "Data Replication S3 Bucket"
                 },
                 "S3BucketExisting": {
                     "default": "Replicate to Existing Bucket"
@@ -178,12 +171,12 @@
                     "default": "S3 Server-side Encryption Algorithm"
                 },
                 "SubscribeARN": {
-                    "default": "ARN Topic code to publish messages to (Optional)"
+                    "default": "ARN Topic to publish messages to (Optional)"
                 },
                 "Username": {
                     "default": "Fusion Admin Username"
                 },
-                "VPCAvailabilityZones": {
+                "AvailabilityZones": {
                     "default": "Availability Zones"
                 },
                 "VPCCIDR": {
@@ -339,7 +332,7 @@
                 "false"
             ],
             "Default": "false",
-            "Description": "Specify if athena output bucket is an existing S3 bucket. If set to false the template will use an existing bucket (specified below).",
+            "Description": "Specify if athena output bucket is an existing S3 bucket. If set to false, the template will create a new bucket (with the name specified below). Othewrise, expects an existing bucket with the name specified below.",
             "Type": "String"
         },
         "AthenaCreateTable": {
@@ -348,7 +341,7 @@
                 "false"
             ],
             "Default": "true",
-            "Description": "Specify to create athena table",
+            "Description": "Specify true to create athena table",
             "Type": "String"
         },
         "ClusterInstanceCount": {
@@ -361,7 +354,7 @@
             "AllowedPattern": "[0-9A-z]+",
             "ConstraintDescription": "The Cluster Name must be alphanumeric",
             "Default": "awsfs",
-            "Description": "Fusion CF ID",
+            "Description": "Fusion Cluster ID",
             "Type": "String"
         },
         "ClusterNodeType": {
@@ -481,7 +474,7 @@
                 "false"
             ],
             "Default": "false",
-            "Description": "Specify if destination bucket is an existing S3 bucket. If set to false the template will use an existing bucket (specified below).",
+            "Description": "Specify if destination bucket is an existing S3 bucket. If set to false, the template will create a new bucket (with the name specified below). Othewrise, expects an existing bucket with the name specified below.",
             "Type": "String"
         },
         "S3ServerEncryption": {
@@ -495,7 +488,7 @@
             "Type": "String"
         },
         "SubscribeARN": {
-            "Description": "ARN Code of topic to email.",
+            "Description": "ARN of topic to email.",
             "Type": "String"
         },
         "Username": {
@@ -505,8 +498,8 @@
             "Description": "The name of the default admin user for WD Fusion",
             "Type": "String"
         },
-        "VPCAvailabilityZones": {
-            "Description": "AZ the public network will be created in (select 2)",
+        "AvailabilityZones": {
+            "Description": "The list of Availability Zones to use for the subnets in the VPC. You must specify two Availability Zones. By default, the Quick Start preserves the logical order you specify.",
             "Type": "List<AWS::EC2::AvailabilityZone::Name>"
         },
         "VPCCIDR": {
@@ -617,7 +610,7 @@
                     }
                 },
                 "TemplateURL": {
-                    "Fn::Sub": "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/quickstart-data-lake-wandisco-existing.template"
+                    "Fn::Sub": "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/quickstart-data-lake-wandisco.template"
                 }
             },
             "Type": "AWS::CloudFormation::Stack"
@@ -629,7 +622,7 @@
                         "Fn::Join": [
                             ",",
                             {
-                                "Ref": "VPCAvailabilityZones"
+                                "Ref": "AvailabilityZones"
                             }
                         ]
                     },

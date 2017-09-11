@@ -1,5 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "This template will deploy Hybrid Datalake solution using WANdisco Fusion and other AWS Services into an existing VPC. **WARNING** You will be billed for the AWS resources used if you create a stack from this template.",
     "Conditions": {
         "AthenaBucketExistingCondition": {
             "Fn::And": [
@@ -33,18 +34,9 @@
             ]
         }
     },
-    "Description": "WANdisco Fusion Getting Started stack template: This template will deploy WANdisco Fusion into an existing VPC and optionally startup Athena to allow for sync data validation.",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
-                {
-                    "Label": {
-                        "default": "General Parameters"
-                    },
-                    "Parameters": [
-                        "KeyName"
-                    ]
-                },
                 {
                     "Label": {
                         "default": "Network Configuration"
@@ -52,9 +44,7 @@
                     "Parameters": [
                         "VPCID",
                         "SubnetIdA",
-                        "SubnetIdB",
-                        "LocalFusionAccess",
-                        "AdminFusionAccess"
+                        "SubnetIdB"
                     ]
                 },
                 {
@@ -65,7 +55,10 @@
                         "ClusterName",
                         "ClusterNodeType",
                         "PersistentStorage",
-                        "ClusterInstanceCount"
+                        "ClusterInstanceCount",
+                        "KeyName",
+                        "LocalFusionAccess",
+                        "AdminFusionAccess"
                     ]
                 },
                 {
@@ -162,7 +155,7 @@
                     "default": "AWS Quick Start Version"
                 },
                 "S3Bucket": {
-                    "default": "S3 Bucket"
+                    "default": "Data Replication S3 Bucket"
                 },
                 "S3BucketExisting": {
                     "default": "Replicate to Existing Bucket"
@@ -177,7 +170,7 @@
                     "default": "VPC Subnet ID for Zone 2"
                 },
                 "SubscribeARN": {
-                    "default": "ARN Topic code to publish messages to (Optional)"
+                    "default": "ARN Topic to publish messages to (Optional)"
                 },
                 "Username": {
                     "default": "Fusion Admin Username"
@@ -302,7 +295,7 @@
                 "false"
             ],
             "Default": "false",
-            "Description": "Specify if athena output bucket is an existing S3 bucket. If set to false the template will use an existing bucket (specified below).",
+            "Description": "Specify if athena output bucket is an existing S3 bucket. If set to false, the template will create a new bucket (with the name specified below). Othewrise, expects an existing bucket with the name specified below.",
             "Type": "String"
         },
         "AthenaCreateTable": {
@@ -324,7 +317,7 @@
             "AllowedPattern": "[0-9A-z]+",
             "ConstraintDescription": "The Cluster Name must be alphanumeric",
             "Default": "awsfs",
-            "Description": "Fusion CF ID",
+            "Description": "Fusion Cluster ID",
             "Type": "String"
         },
         "ClusterNodeType": {
@@ -430,7 +423,7 @@
                 "false"
             ],
             "Default": "false",
-            "Description": "Specify if destination bucket is an existing S3 bucket. If set to false the template will use an existing bucket (specified below).",
+            "Description": "Specify if destination bucket is an existing S3 bucket. If set to false, the template will create a new bucket (with the name specified below). Othewrise, expects an existing bucket with the name specified below.",
             "Type": "String"
         },
         "S3ServerEncryption": {
@@ -452,7 +445,7 @@
             "Type": "AWS::EC2::Subnet::Id"
         },
         "SubscribeARN": {
-            "Description": "ARN Code of topic to email.",
+            "Description": "ARN of topic to email.",
             "Type": "String"
         },
         "Username": {
