@@ -119,6 +119,9 @@
                 "AthenaCreateTable": {
                     "default": "Create Athena Table"
                 },
+                "AvailabilityZones": {
+                    "default": "Availability Zones"
+                },
                 "ClusterInstanceCount": {
                     "default": "Cluster Instance Count"
                 },
@@ -175,9 +178,6 @@
                 },
                 "Username": {
                     "default": "Fusion Admin Username"
-                },
-                "AvailabilityZones": {
-                    "default": "Availability Zones"
                 },
                 "VPCCIDR": {
                     "default": "VPC CIDR"
@@ -344,6 +344,10 @@
             "Description": "Specify true to create athena table",
             "Type": "String"
         },
+        "AvailabilityZones": {
+            "Description": "The list of Availability Zones to use for the subnets in the VPC. You must specify two Availability Zones. By default, the Quick Start preserves the logical order you specify.",
+            "Type": "List<AWS::EC2::AvailabilityZone::Name>"
+        },
         "ClusterInstanceCount": {
             "Default": "1",
             "Description": "Size of Fusion Server cluster",
@@ -488,7 +492,7 @@
             "Type": "String"
         },
         "SubscribeARN": {
-            "Description": "ARN of topic to email.",
+            "Description": "(Optional) ARN of topic to email.",
             "Type": "String"
         },
         "Username": {
@@ -497,10 +501,6 @@
             "Default": "admin",
             "Description": "The name of the default admin user for WD Fusion",
             "Type": "String"
-        },
-        "AvailabilityZones": {
-            "Description": "The list of Availability Zones to use for the subnets in the VPC. You must specify two Availability Zones. By default, the Quick Start preserves the logical order you specify.",
-            "Type": "List<AWS::EC2::AvailabilityZone::Name>"
         },
         "VPCCIDR": {
             "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
