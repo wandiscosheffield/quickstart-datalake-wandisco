@@ -5,7 +5,7 @@
   },
   {
     "ParameterKey": "AthenaBucket",
-    "ParameterValue": "athena-bucket"
+    "ParameterValue": "wandisco-athena-bucket-test"
   },
   {
     "ParameterKey": "KeyName",
@@ -21,15 +21,11 @@
   },
   {
     "ParameterKey": "S3Bucket",
-    "ParameterValue": "replication-bucket"
+    "ParameterValue": "wandisco-replication-bucket-test"
   },
   {
     "ParameterKey": "AvailabilityZones",
     "ParameterValue": "$[alfred_genaz_2]"
-  },
-  {
-    "ParameterKey": "AthenaBucketName",
-    "ParameterValue": "$[alfred_genuuid]"
   },
   {
     "ParameterKey": "SubscribeARN",
