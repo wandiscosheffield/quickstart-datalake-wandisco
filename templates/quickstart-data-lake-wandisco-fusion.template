@@ -183,41 +183,44 @@
             }
         },
         "AWSRegionToAMI": {
+            "AMI": {
+                "WDFUSIONHVM": "WANdisco Fusion - 2016 08 02-06c7435b-4ea4-4bd3-bfaa-fc58c3e0f5a6-ami-dc0375cb.3"
+            },
             "us-east-1": {
-                "amiID": "ami-25b0c632"
+                "WDFUSIONHVM": "ami-25b0c632"
             },
             "us-east-2": {
-                "amiID": "ami-47b5ee22"
+                "WDFUSIONHVM": "ami-47b5ee22"
             },
             "us-west-1": {
-                "amiID": "ami-50b0fc30"
+                "WDFUSIONHVM": "ami-50b0fc30"
             },
             "us-west-2": {
-                "amiID": "ami-2db86b4d"
+                "WDFUSIONHVM": "ami-2db86b4d"
             },
             "eu-central-1": {
-                "amiID": "ami-4387752c"
+                "WDFUSIONHVM": "ami-4387752c"
             },
             "eu-west-1": {
-                "amiID": "ami-38740b4b"
+                "WDFUSIONHVM": "ami-38740b4b"
             },
             "ap-southeast-1": {
-                "amiID": "ami-d4b862b7"
+                "WDFUSIONHVM": "ami-d4b862b7"
             },
             "ap-southeast-2": {
-                "amiID": "ami-c71322a4"
+                "WDFUSIONHVM": "ami-c71322a4"
             },
             "ap-northeast-1": {
-                "amiID": "ami-9b64b0fa"
+                "WDFUSIONHVM": "ami-9b64b0fa"
             },
             "ap-northeast-2": {
-                "amiID": "ami-e807d286"
+                "WDFUSIONHVM": "ami-e807d286"
             },
             "sa-east-1": {
-                "amiID": "ami-b0ae3edc"
+                "WDFUSIONHVM": "ami-b0ae3edc"
             },
             "ap-south-1": {
-                "amiID": "ami-ed82f782"
+                "WDFUSIONHVM": "ami-ed82f782"
             }
         }
     },
@@ -492,7 +495,7 @@
                         {
                             "Ref": "AWS::Region"
                         },
-                        "amiID"
+                        "WDFUSIONHVM"
                     ]
                 },
                 "InstanceType": {
