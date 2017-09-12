@@ -426,7 +426,7 @@
         "Password": {
             "AllowedPattern": "[!@#$&*0-9A-z]+",
             "ConstraintDescription": "The password value must be alphanumeric or special character (!@#$&*)",
-            "Description": "The password for the WD Fusion admin.",
+            "Description": "The password for the WD Fusion admin. Password value must be alphanumeric and include one of these special characters (!@#$&*)",
             "NoEcho": true,
             "Type": "String"
         },
