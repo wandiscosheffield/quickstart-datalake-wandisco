@@ -30,5 +30,13 @@
   {
     "ParameterKey": "AthenaBucketName",
     "ParameterValue": "$[alfred_genuuid]"
+  },
+  {
+    "ParameterKey": "SubscribeARN",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "FusionLicense",
+    "ParameterValue": ""
   }
 ]
