@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "WANdisco Fusion Getting Started stack template: This template will deploy an Athena db and table to access replicated data in wandisco fusion.",
+    "Description": "WANdisco Fusion Getting Started stack template: This template will deploy an Athena db and table to access replicated data in wandisco fusion.(qs-1nmjm7280)",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [

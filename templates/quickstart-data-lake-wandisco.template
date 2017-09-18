@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "This template will deploy Hybrid Datalake solution using WANdisco Fusion and other AWS Services into an existing VPC. **WARNING** You will be billed for the AWS resources used if you create a stack from this template.",
+    "Description": "This template will deploy Hybrid Datalake solution using WANdisco Fusion and other AWS Services into an existing VPC. **WARNING** You will be billed for the AWS resources used if you create a stack from this template.(qs-1nmjm728l)",
     "Conditions": {
         "AthenaBucketExistingCondition": {
             "Fn::And": [

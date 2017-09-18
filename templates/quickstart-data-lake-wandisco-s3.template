@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Generic S3 template that will delete the S3 bucket content and removes the bucket when the stack is deleted.",
+    "Description": "Generic S3 template that will delete the S3 bucket content and removes the bucket when the stack is deleted.(qs-1nmjm728g)",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [

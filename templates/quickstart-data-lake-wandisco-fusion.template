@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "CloudFormation template to create a Fusion instances for AWS Marketplace",
+    "Description": "CloudFormation template to create a Fusion instances for AWS Marketplace.(qs-1nmjm7285)",
     "Parameters": {
         "AdminSecurityGroupId": {
             "Description": "The Id of the Security Group to use for administration access. This Security Group will be used by the EC2 instance in which Fusion runs.",
