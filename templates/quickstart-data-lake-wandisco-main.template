@@ -398,7 +398,7 @@
                 "5.4.0"
             ],
             "Default": "5.4.0",
-            "Description": "EMR Version",
+            "Description": "The version of Amazon EMR, if you decide to attach an Amazon EMR cluster to replicate data back to your on-premises server after deployment. The two options are 5.3.0 and 5.4.0.",
             "Type": "String"
         },
         "FusionLicense": {
