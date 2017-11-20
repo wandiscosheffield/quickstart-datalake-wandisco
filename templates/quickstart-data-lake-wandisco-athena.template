@@ -333,6 +333,9 @@
                         },
                         "PolicyName": "lambda-athena-access"
                     }
+                ],
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/AWSGlueConsoleFullAccess"
                 ]
             },
             "Type": "AWS::IAM::Role"
