@@ -45,14 +45,14 @@ RUN groupadd -r hadoop \
 
 WORKDIR /tmp
 
-ENV HADOOP_VERSION 2.7.0
-RUN curl -O -L "https://www.apache.org/dyn/mirrors/closest.cgi?action=download&filename=hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz" \
- && tar xvzf hadoop-${HADOOP_VERSION}.tar.gz \
- && mv hadoop-${HADOOP_VERSION} /usr/local/ \
- && chown -R hadoop:hadoop /usr/local/hadoop-${HADOOP_VERSION} \
- && chmod g+w -R /usr/local/hadoop-${HADOOP_VERSION} \
- && ln -s /usr/local/hadoop-${HADOOP_VERSION} /usr/local/hadoop \
- && rm hadoop-${HADOOP_VERSION}.tar.gz
+ENV HADOOP_VERSION 2.7.4
+RUN curl -O -L "https://www.apache.org/dyn/mirrors/closest.cgi?action=download&filename=hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz" \
+ && tar xvzf hadoop-$HADOOP_VERSION.tar.gz \
+ && mv hadoop-$HADOOP_VERSION /usr/local/ \
+ && chown -R hadoop:hadoop /usr/local/hadoop-$HADOOP_VERSION \
+ && chmod g+w -R /usr/local/hadoop-$HADOOP_VERSION \
+ && ln -s /usr/local/hadoop-$HADOOP_VERSION /usr/local/hadoop \
+ && rm hadoop-$HADOOP_VERSION.tar.gz
 
 ENV HADOOP_PREFIX /usr/local/hadoop
 ENV HADOOP_COMMON_HOME /usr/local/hadoop
@@ -111,7 +111,7 @@ RUN echo '' >> /etc/profile \
  && echo 'export PATH=$PATH' >> /etc/profile
 
 
-ENV FUSION_CORE_INSTALLER fusion-hcfs-asf-2.7.0-client-hdfs_2.10.3.1-2485_all.deb
+ENV FUSION_CORE_INSTALLER fusion-hcfs-asf-2.7.0-client-hdfs_2.11.0.2-1_all.deb
 COPY $FUSION_CORE_INSTALLER $FUSION_CORE_INSTALLER
 RUN dpkg -i $FUSION_CORE_INSTALLER \
  && rm $FUSION_CORE_INSTALLER
@@ -119,7 +119,7 @@ RUN dpkg -i $FUSION_CORE_INSTALLER \
 COPY silent_install_env.sh /opt/fusion/silent_install_env.sh
 ENV SILENT_CONFIG_PATH /opt/fusion/silent_install_env.sh
 
-ENV FUSION_UI_INSTALLER fusion-ui-server-asf_deb_installer.6.sh
+ENV FUSION_UI_INSTALLER fusion-ui-server-asf_deb_installer.sh
 COPY $FUSION_UI_INSTALLER /opt/fusion/$FUSION_UI_INSTALLER
 RUN chmod 755 /opt/fusion/$FUSION_UI_INSTALLER \
  && /opt/fusion/$FUSION_UI_INSTALLER
@@ -131,6 +131,8 @@ RUN mkdir -p /etc/hadoop \
 
 ADD scripts/startup.sh /usr/bin/startup.sh
 ADD scripts/load.sh /usr/bin/load.sh
+RUN chmod 755 /usr/bin/startup.sh
+RUN chmod 755 /usr/bin/load.sh
 CMD ["/usr/bin/startup.sh"]
 
 # Hdfs ports
