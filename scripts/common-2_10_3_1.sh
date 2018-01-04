@@ -1,7 +1,7 @@
 #!/bin/bash
 
 BOOTSTRAP_LATEST_URL="https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz"
-VALIDATION_SCRIPT_PATH="/tmp/validation-2_10_3_1.py"
+VALIDATION_SCRIPT_PATH="/tmp/validation-2_11_0_3.py"
 INSTALLER_PATH="/tmp/fusion-ui-server-installer.sh"
 DEFAULT_LICENSE_URL="s3://wandisco-public-files/fusion/license.key"
 DEFAULT_LICENSE_BUCKET_REGION="eu-west-1"
@@ -98,9 +98,9 @@ function validate_security_group() {
 
   echo "Validating security group."
   ## Check that the security group is configured correctly
-  aws s3 cp s3://wandisco-public-files/scripts/validation-2_10_3_1.py "$VALIDATION_SCRIPT_PATH"
+  aws s3 cp s3://wandisco-public-files/scripts/validation-2_11_0_3.py "$VALIDATION_SCRIPT_PATH"
   if [[ ! -e  "$VALIDATION_SCRIPT_PATH" ]]; then
-    error_exit "Could not download validation-2_10_3_1.py." "$FUSION_INSTALLED_HANDLER" 1
+    error_exit "Could not download validation-2_11_0_3.py." "$FUSION_INSTALLED_HANDLER" 1
   else
     if ! python "$VALIDATION_SCRIPT_PATH" "$region" "$security_group_id"; then
       error_exit "Error running validation script, see logs for more information." "$FUSION_INSTALLED_HANDLER" 1
