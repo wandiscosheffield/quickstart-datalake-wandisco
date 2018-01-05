@@ -2,7 +2,7 @@
 #Source properties file
 source /tmp/amazonProperties.properties
 #Source common functions
-source /tmp/common-2_11_0_3.sh
+source /tmp/common-2_11_1.sh
 
 INSTALLATION_MODE=${1:-EMR}
 

@@ -63,10 +63,10 @@
         },
         "FusionVersion": {
             "AllowedValues": [
-                "2.11.0.3"
+                "2.11.1"
             ],
             "ConstraintDescription": "Supported versions of Fusion within AWS Marketplace",
-            "Default": "2.11.0.3",
+            "Default": "2.11.1",
             "Description": "Fusion Version",
             "Type": "String"
         },
@@ -173,8 +173,8 @@
     },
     "Mappings": {
         "FusionVersionInstaller": {
-            "2.11.0.3": {
-                "FileURI": "s3://wandisco-public-files/fusion/fusion-ui-server-emr_rpm_installer_2.11.0.3.sh"
+            "2.11.1": {
+                "FileURI": "s3://wandisco-public-files/fusion/fusion-ui-server-emr_rpm_installer_2.11.1.sh"
             }
         },
         "AWSRegionToAMI": {
@@ -272,18 +272,18 @@
                     "config": {
                         "commands": {
                             "setup": {
-                                "command": "/tmp/amazonCompanionScript-2_11_0_3.sh >> /var/log/cloud-init-output.log",
+                                "command": "/tmp/amazonCompanionScript-2_11_1.sh >> /var/log/cloud-init-output.log",
                                 "cwd": "/tmp"
                             }
                         },
                         "files": {
-                            "/tmp/amazonCompanionScript-2_11_0_3.sh": {
+                            "/tmp/amazonCompanionScript-2_11_1.sh": {
                                 "authentication": "S3AccessCreds",
                                 "group": "root",
                                 "mode": "000700",
                                 "owner": "root",
                                 "source": {
-                                    "Fn::Sub": "https://s3.amazonaws.com/${QSS3BucketName}/${QSS3KeyPrefix}scripts/amazonCompanionScript-2_11_0_3.sh"
+                                    "Fn::Sub": "https://s3.amazonaws.com/${QSS3BucketName}/${QSS3KeyPrefix}scripts/amazonCompanionScript-2_11_1.sh"
                                 }
                             },
                             "/tmp/amazonProperties.properties": {
@@ -405,13 +405,13 @@
                                 "mode": "000600",
                                 "owner": "root"
                             },
-                            "/tmp/common-2_11_0_3.sh": {
+                            "/tmp/common-2_11_1.sh": {
                                 "authentication": "S3AccessCreds",
                                 "group": "root",
                                 "mode": "000700",
                                 "owner": "root",
                                 "source": {
-                                    "Fn::Sub": "https://s3.amazonaws.com/${QSS3BucketName}/${QSS3KeyPrefix}scripts/common-2_11_0_3.sh"
+                                    "Fn::Sub": "https://s3.amazonaws.com/${QSS3BucketName}/${QSS3KeyPrefix}scripts/common-2_11_1.sh"
                                 }
                             }
                         }

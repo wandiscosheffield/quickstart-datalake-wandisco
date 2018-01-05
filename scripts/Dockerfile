@@ -111,7 +111,7 @@ RUN echo '' >> /etc/profile \
  && echo 'export PATH=$PATH' >> /etc/profile
 
 
-ENV FUSION_CORE_INSTALLER fusion-hcfs-asf-2.7.0-client-hdfs_2.11.0.3-1_all.deb
+ENV FUSION_CORE_INSTALLER fusion-hcfs-asf-2.7.0-client-hdfs_2.11.1-1_all.deb
 COPY $FUSION_CORE_INSTALLER $FUSION_CORE_INSTALLER
 RUN dpkg -i $FUSION_CORE_INSTALLER \
  && rm $FUSION_CORE_INSTALLER
