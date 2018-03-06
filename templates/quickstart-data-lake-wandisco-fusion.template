@@ -593,6 +593,13 @@
                         "PolicyDocument": {
                             "Statement": [
                                 {
+                                    "Resource": "arn:aws:dynamodb:*:*:table/EmrFSMetadata",
+                                    "Action": [
+                                      "dynamodb:*"
+                                    ],
+                                    "Effect": "Allow"
+                                  },
+                                {
                                     "Action": [
                                         "autoscaling:DetachInstances",
                                         "autoscaling:DescribeAutoScalingInstances",
